@@ -1,6 +1,6 @@
 {
   "name": "lumen-studio",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Lumen Studio - Local AI desktop app. Run LLMs locally with GPU acceleration.",
   "main": "dist-electron/main.js",
   "author": "Lumen Studio",
@@ -14,13 +14,14 @@
     "build:assets": "node scripts/build-brand-assets.mjs",
     "build": "npm run build:assets && npm run build:renderer && npm run build:electron",
     "start": "npm run build && electron .",
-    "package": "npm run build && electron-builder --win --x64",
-    "package:windows": "npm run build && electron-builder --win nsis --x64",
-    "package:linux": "npm run build && electron-builder --linux AppImage --x64",
-    "package:mac:x64": "npm run build && electron-builder --mac dmg --x64",
-    "package:mac:arm64": "npm run build && electron-builder --mac dmg --arm64",
+    "package": "npm run build && electron-builder --win --x64 --publish never",
+    "package:windows": "npm run build && electron-builder --win nsis --x64 --publish never",
+    "package:linux": "npm run build && electron-builder --linux AppImage --x64 --publish never",
+    "package:mac:x64": "npm run build && electron-builder --mac dmg --x64 --publish never",
+    "package:mac:arm64": "npm run build && electron-builder --mac dmg --arm64 --publish never",
     "preview": "vite preview",
-    "lint": "tsc --noEmit && tsc -p electron/tsconfig.json --noEmit"
+    "lint": "tsc --noEmit && tsc -p electron/tsconfig.json --noEmit",
+    "test:paths": "npm run build:electron && node scripts/test-paths.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",

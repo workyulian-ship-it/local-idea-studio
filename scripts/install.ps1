@@ -1,8 +1,10 @@
-# Install Lumen Studio to D:\LLM AI\Lumen Studio and create Start Menu + Desktop shortcuts
+# Install Lumen Studio for the current Windows user and create Start Menu + Desktop shortcuts
 $ErrorActionPreference = "Stop"
 
-$Source      = "D:\LLM AI\lumen-studio\release-artifacts\win-unpacked"
-$InstallDir  = "D:\LLM AI\Lumen Studio"
+$ProjectRoot = Split-Path -Parent $PSScriptRoot
+$InstallBase = Join-Path $env:LOCALAPPDATA "Programs"
+$Source      = Join-Path $ProjectRoot "release-artifacts\win-unpacked"
+$InstallDir  = Join-Path $InstallBase "Lumen Studio"
 $AppName     = "Lumen Studio"
 $ExeName     = "Lumen Studio.exe"
 $ExePath     = Join-Path $InstallDir $ExeName
@@ -16,8 +18,8 @@ function Assert-ChildPath($path, $parent, $label) {
     return $fullPath
 }
 
-$Source = Assert-ChildPath $Source "D:\LLM AI" "Package source"
-$InstallDir = Assert-ChildPath $InstallDir "D:\LLM AI" "Install directory"
+$Source = Assert-ChildPath $Source $ProjectRoot "Package source"
+$InstallDir = Assert-ChildPath $InstallDir $InstallBase "Install directory"
 $ExePath = Join-Path $InstallDir $ExeName
 if (-not (Test-Path -LiteralPath (Join-Path $Source $ExeName) -PathType Leaf)) {
     throw "Packaged application not found: $(Join-Path $Source $ExeName)"

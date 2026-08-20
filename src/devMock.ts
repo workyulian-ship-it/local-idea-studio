@@ -57,11 +57,14 @@ const files: HfFile[] = [
   { rfilename: "Meta-Llama-3.1-8B-Instruct-Q8_0.gguf", size: 8540775840, quantization: "Q8_0" },
 ];
 
+const mockAiRoot = "C:\\Users\\You\\Documents\\Lumen Studio";
+const mockModelsDir = `${mockAiRoot}\\models`;
+
 const mockLocalModel: LocalModel = {
   id: "bartowski__Meta-Llama-3.1-8B-Instruct-GGUF/Meta-Llama-3.1-8B-Instruct-IQ3_M.gguf",
   repoId: "bartowski/Meta-Llama-3.1-8B-Instruct-GGUF",
   filename: "Meta-Llama-3.1-8B-Instruct-IQ3_M.gguf",
-  path: "D:\\LLM AI\\models\\bartowski__Meta-Llama-3.1-8B-Instruct-GGUF\\Meta-Llama-3.1-8B-Instruct-IQ3_M.gguf",
+  path: `${mockModelsDir}\\bartowski__Meta-Llama-3.1-8B-Instruct-GGUF\\Meta-Llama-3.1-8B-Instruct-IQ3_M.gguf`,
   sizeBytes: 3784828320,
   quantization: "IQ3_M",
   format: "GGUF",
@@ -80,11 +83,11 @@ export function installDevMock() {
   let loadedModel: LoadedModelInfo | null = null;
   window.lumen = {
     getPaths: async () => ({
-      aiRoot: "D:\\LLM AI",
-      modelsDir: savedSettings.modelsDirectory ?? "D:\\LLM AI\\models",
-      chatsDir: "D:\\LLM AI\\chats",
-      cacheDir: "D:\\LLM AI\\cache",
-      logsDir: "D:\\LLM AI\\logs",
+      aiRoot: mockAiRoot,
+      modelsDir: savedSettings.modelsDirectory ?? mockModelsDir,
+      chatsDir: `${mockAiRoot}\\chats`,
+      cacheDir: `${mockAiRoot}\\cache`,
+      logsDir: `${mockAiRoot}\\logs`,
       platform: "win32",
       appVersion: "dev",
       userData: "dev",
@@ -93,7 +96,7 @@ export function installDevMock() {
     openFolder: async () => true,
     showItemInFolder: async () => true,
     getGpuInfo: async () => ({ backend: loadedModel?.backend ?? "vulkan", gpu: loadedModel?.gpu ?? "AMD Radeon", modelLoaded: !!loadedModel }),
-    selectModelsDirectory: async () => "D:\\Custom Lumen Models",
+    selectModelsDirectory: async () => "C:\\AI Models",
     getSettings: async () => savedSettings,
     saveSettings: async (next: Partial<AppSettings>) => (savedSettings = { ...savedSettings, ...next }),
     hfSearch: async ({ cursor }: any) => ({
@@ -114,7 +117,7 @@ export function installDevMock() {
         eta: 0,
         status: "queued",
         startedAt: Date.now(),
-        destination: `${savedSettings.modelsDirectory ?? "D:\\LLM AI\\models"}\\${payload.filename}`,
+        destination: `${savedSettings.modelsDirectory ?? mockModelsDir}\\${payload.filename}`,
       };
       mockJobs = [job, ...mockJobs.filter((item) => item.id !== job.id)];
       const timer = setInterval(() => {

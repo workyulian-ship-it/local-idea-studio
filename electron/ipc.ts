@@ -32,9 +32,16 @@ export function registerIpcHandlers(ctx: IpcContext) {
   bindWindowGetter(win);
   const getActiveModelsDir = async () => {
     const settings = await getSettings(ctx.settingsFile);
-    const modelsDir = settings.modelsDirectory || ctx.modelsDir;
-    fs.mkdirSync(modelsDir, { recursive: true });
-    return modelsDir;
+    if (settings.modelsDirectory) {
+      try {
+        fs.mkdirSync(settings.modelsDirectory, { recursive: true });
+        return settings.modelsDirectory;
+      } catch (error) {
+        console.error(`Configured model directory is unavailable: ${settings.modelsDirectory}`, error);
+      }
+    }
+    fs.mkdirSync(ctx.modelsDir, { recursive: true });
+    return ctx.modelsDir;
   };
 
   // ---------------- System ----------------

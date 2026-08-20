@@ -46,7 +46,7 @@ export function ChatView() {
                   <h2 className="font-semibold">Get your first model</h2>
                 </div>
                 <p className="text-xs text-text-muted mb-3">
-                  Browse and download GGUF models directly from Hugging Face — they save to your D:\LLM AI drive.
+                  Browse and download GGUF models directly from Hugging Face — they save to your local Lumen Studio models folder.
                 </p>
                 <button onClick={() => setView("library")} className="btn-primary">
                   Open Model Library

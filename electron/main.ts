@@ -1,47 +1,33 @@
 import { app, BrowserWindow, ipcMain, dialog, shell } from "electron";
 import path from "path";
-import fs from "fs";
-import os from "os";
 import { fileURLToPath } from "url";
 import { registerIpcHandlers } from "./ipc.js";
 import { initLlama, shutdownLlama } from "./llama.js";
+import { createStoragePaths, resolveAiRoot, StoragePaths } from "./paths.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Default AI storage root: D:\LLM AI (user's dedicated AI drive)
-const DEFAULT_AI_ROOT = "D:\\LLM AI";
+// Migration only: never selected on a new installation. It keeps v0.1.0 users
+// connected to models/settings that the earlier release already created here.
+const LEGACY_WINDOWS_AI_ROOT = "D:\\LLM AI";
 
-function getAiRoot(): string {
-  const configured = process.env.LUMEN_AI_ROOT;
-  if (configured && fs.existsSync(path.dirname(configured))) return configured;
-  if (fs.existsSync("D:\\")) return DEFAULT_AI_ROOT;
-  return path.join(os.homedir(), "LumenStudio");
-}
+function initializeStorage(): StoragePaths {
+  const preferredRoot = resolveAiRoot({
+    configuredRoot: process.env.LUMEN_AI_ROOT,
+    documentsDir: app.getPath("documents"),
+    legacyRoot: process.platform === "win32" ? LEGACY_WINDOWS_AI_ROOT : undefined,
+  });
 
-const AI_ROOT = getAiRoot();
-const MODELS_DIR = path.join(AI_ROOT, "models");
-const CHATS_DIR = path.join(AI_ROOT, "chats");
-const CACHE_DIR = path.join(AI_ROOT, "cache");
-const SETTINGS_FILE = path.join(AI_ROOT, "settings.json");
-const LOGS_DIR = path.join(AI_ROOT, "logs");
-
-for (const dir of [AI_ROOT, MODELS_DIR, CHATS_DIR, CACHE_DIR, LOGS_DIR]) {
   try {
-    fs.mkdirSync(dir, { recursive: true });
-  } catch (e) {
-    console.error("Failed to create dir:", dir, e);
+    return createStoragePaths(preferredRoot);
+  } catch (error) {
+    // Documents may be redirected to an unavailable network/OneDrive folder.
+    // Electron's per-user data directory is always the safe final fallback.
+    const fallbackRoot = path.join(app.getPath("userData"), "data");
+    console.error(`Failed to initialize storage at ${preferredRoot}; using ${fallbackRoot}`, error);
+    return createStoragePaths(fallbackRoot);
   }
-}
-
-// Persist the chosen root so the renderer can read it on first launch
-try {
-  fs.writeFileSync(
-    path.join(AI_ROOT, ".lumen-root.json"),
-    JSON.stringify({ root: AI_ROOT, models: MODELS_DIR, chats: CHATS_DIR }, null, 2)
-  );
-} catch (e) {
-  console.error("Failed to write root marker:", e);
 }
 
 let mainWindow: BrowserWindow | null = null;
@@ -94,17 +80,18 @@ function createWindow() {
 }
 
 app.whenReady().then(async () => {
+  const storage = initializeStorage();
   registerIpcHandlers({
-    aiRoot: AI_ROOT,
-    modelsDir: MODELS_DIR,
-    chatsDir: CHATS_DIR,
-    cacheDir: CACHE_DIR,
-    settingsFile: SETTINGS_FILE,
-    logsDir: LOGS_DIR,
+    aiRoot: storage.aiRoot,
+    modelsDir: storage.modelsDir,
+    chatsDir: storage.chatsDir,
+    cacheDir: storage.cacheDir,
+    settingsFile: storage.settingsFile,
+    logsDir: storage.logsDir,
     getMainWindow: () => mainWindow,
   });
 
-  await initLlama(MODELS_DIR, LOGS_DIR);
+  await initLlama(storage.modelsDir, storage.logsDir);
   createWindow();
 
   app.on("activate", () => {

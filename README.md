@@ -4,17 +4,20 @@ Lumen Studio is a Windows desktop application for discovering, downloading, and 
 
 Official website: https://lumen-studio-local-ai.lush-flute-8657.chatgpt.site/
 
-## v0.1.0 early access
+## v0.1.1 early access
 
 - Windows 10/11 x64
 - Local GGUF inference through `node-llama-cpp`
 - CPU and Vulkan GPU runtime options
 - Hugging Face GGUF search and downloads
-- Configurable model storage directory
+- Models stored by default in the current user's `Documents/Lumen Studio/models` folder
+- Configurable model storage directory for any available local drive
 - Per-model generation and context settings
 - Local chat and settings storage
 
-The v0.1.0 Windows installer is currently **unsigned**. Windows may display a Microsoft Defender SmartScreen warning. Verify the installer checksum against [`SHA256SUMS.txt`](./SHA256SUMS.txt) before running it.
+New installations never require a `D:` drive. Existing v0.1.0 users who already have Lumen data on `D:\LLM AI` keep that location so an update does not hide their settings or downloaded models.
+
+The v0.1.1 Windows installer is currently **unsigned**. Windows may display a Microsoft Defender SmartScreen warning. Verify the installer checksum against [`SHA256SUMS.txt`](./SHA256SUMS.txt) before running it.
 
 ## Privacy and network behavior
 
@@ -52,4 +55,3 @@ Please read [`SECURITY.md`](./SECURITY.md) before reporting a vulnerability. Do 
 ## License
 
 The source is publicly visible for transparency, auditing, and trust, but Lumen Studio is **source-available proprietary software**, not an open-source project. Use and redistribution are governed by [`LICENSE`](./LICENSE). Third-party dependencies keep their own licenses.
-

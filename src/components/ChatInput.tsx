@@ -12,9 +12,9 @@ interface Props {
 }
 
 export function ChatInput({ disabled }: Props) {
-  const { settings, update } = useSettings();
+  const { settings } = useSettings();
   const { loaded } = useModels();
-  const { current, streaming, streamText, streamStats, append, setStreamText, setStreamStats, setStreaming, resetStream, update: updateChat } = useChats();
+  const { current, streaming, streamStats, append, setStreaming, resetStream, update: updateChat } = useChats();
   const { pushToast } = useUi();
   const [text, setText] = useState("");
   const taRef = useRef<HTMLTextAreaElement>(null);
@@ -23,20 +23,22 @@ export function ChatInput({ disabled }: Props) {
   useEffect(() => {
     const onToken = (e: any) => {
       if (!e) return;
-      if (current && e.conversationId && e.conversationId !== current.id) return;
+      const chatState = useChats.getState();
+      if (e.conversationId && e.conversationId !== chatState.current?.id) return;
       if (e.type === "token") {
-        setStreamText(streamText + e.text);
+        chatState.setStreamText((currentText) => currentText + e.text);
       } else if (e.type === "done") {
-        finalize(e.text || streamText, e.aborted);
+        void finalize(e.text || chatState.streamText, e.aborted);
       } else if (e.type === "error") {
         pushToast({ kind: "error", text: e.error ?? "Inference error" });
-        setStreaming(false);
-        resetStream();
+        chatState.setStreaming(false);
+        chatState.resetStream();
       }
     };
     const onStats = (e: any) => {
-      if (current && e.conversationId && e.conversationId !== current.id) return;
-      setStreamStats({ tps: e.tps, tokens: e.tokens, elapsed: e.elapsed });
+      const chatState = useChats.getState();
+      if (e.conversationId && e.conversationId !== chatState.current?.id) return;
+      chatState.setStreamStats({ tps: e.tps, tokens: e.tokens, elapsed: e.elapsed });
     };
     const offTok = window.lumen.onChatToken(onToken);
     const offStat = window.lumen.onChatStats(onStats);
@@ -44,20 +46,21 @@ export function ChatInput({ disabled }: Props) {
       offTok();
       offStat();
     };
-  }, [current, streamText, pushToast, setStreamText, setStreamStats, setStreaming, resetStream]);
+  }, [pushToast]);
 
   // Finalize is called when stream done
   const finalize = async (text: string, aborted?: boolean) => {
-    if (!current) return;
+    const chatState = useChats.getState();
+    if (!chatState.current) return;
     const assistantMsg = {
       id: Math.random().toString(36).slice(2),
       role: "assistant" as const,
       content: aborted ? text + "\n\n_(stopped)_" : text,
       createdAt: Date.now(),
     };
-    await append(assistantMsg);
-    setStreaming(false);
-    resetStream();
+    await chatState.append(assistantMsg);
+    chatState.setStreaming(false);
+    chatState.resetStream();
     setText("");
   };
 

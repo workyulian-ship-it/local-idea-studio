@@ -1,9 +1,10 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useSettings } from "../store/settings";
 import { useModels } from "../store/models";
+import { useChats } from "../store/chats";
 import { useUi } from "../store/ui";
-import { Folder, RotateCcw } from "lucide-react";
-import type { ModelProfile, SystemPaths } from "../types";
+import { Folder, Loader2, RotateCcw } from "lucide-react";
+import type { AppSettings, ModelProfile, SystemPaths } from "../types";
 import { cn } from "../lib/utils";
 import { getEffectiveModelSettings, getModelProfile } from "../lib/modelSettings";
 
@@ -45,6 +46,7 @@ export function SettingsPanel() {
   const { pushToast } = useUi();
   const [paths, setPaths] = useState<SystemPaths | null>(null);
   const [tps, setTps] = useState<{ backend: string; gpu: string | null; modelLoaded: boolean } | null>(null);
+  const [backendChanging, setBackendChanging] = useState(false);
 
   useEffect(() => {
     window.lumen.getPaths().then(setPaths);
@@ -89,6 +91,41 @@ export function SettingsPanel() {
     setPaths(await window.lumen.getPaths());
     await refreshModels();
     pushToast({ kind: "info", text: "Using the default model folder" });
+  };
+  const changeBackend = async (nextBackend: AppSettings["gpuBackend"]) => {
+    if (nextBackend === settings.gpuBackend || backendChanging) return;
+    const previousBackend = settings.gpuBackend;
+    const modelPath = loaded?.modelPath;
+    setBackendChanging(true);
+    try {
+      const chatState = useChats.getState();
+      if (chatState.streaming && chatState.current) {
+        await window.lumen.abortChat(chatState.current.id);
+      }
+      await update({ gpuBackend: nextBackend });
+      if (modelPath) {
+        await useModels.getState().load(modelPath);
+      }
+      const runtime = await window.lumen.getGpuInfo();
+      setTps(runtime);
+      pushToast({
+        kind: "success",
+        text: modelPath
+          ? `Model reloaded on ${runtime.backend}`
+          : `${nextBackend} will be used when a model is loaded`,
+      });
+    } catch (error: any) {
+      try {
+        await update({ gpuBackend: previousBackend });
+        if (modelPath) await useModels.getState().load(modelPath);
+        setTps(await window.lumen.getGpuInfo());
+      } catch (restoreError) {
+        console.error("Failed to restore previous inference backend", restoreError);
+      }
+      pushToast({ kind: "error", text: `Backend switch failed: ${error?.message ?? String(error)}` });
+    } finally {
+      setBackendChanging(false);
+    }
   };
 
   return (
@@ -212,7 +249,8 @@ export function SettingsPanel() {
             <div className="text-xs text-text-muted mb-1.5">GPU backend</div>
             <select
               value={settings.gpuBackend}
-              onChange={(e) => update({ gpuBackend: e.target.value as any })}
+              onChange={(e) => void changeBackend(e.target.value as AppSettings["gpuBackend"])}
+              disabled={backendChanging}
               className="input"
             >
               <option value="auto">Auto-detect (CUDA preferred, then Vulkan)</option>
@@ -220,7 +258,12 @@ export function SettingsPanel() {
               <option value="vulkan">Vulkan (AMD/NVIDIA/Intel GPU)</option>
               <option value="cpu">CPU only</option>
             </select>
-            <div className="text-[10px] text-text-dim mt-1">Auto uses the fastest supported backend detected. Reload the model after changing this setting.</div>
+            <div className="text-[10px] text-text-dim mt-1 flex items-center gap-1.5">
+              {backendChanging && <Loader2 className="w-3 h-3 animate-spin" />}
+              {backendChanging
+                ? "Stopping generation and reloading the model on the selected backend…"
+                : "Auto uses the fastest supported backend. A loaded model is reloaded automatically when this changes."}
+            </div>
           </div>
           <div>
             <div className="text-xs text-text-muted mb-1.5">Threads (0 = auto)</div>

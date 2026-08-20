@@ -41,7 +41,8 @@ export const useModels = create<ModelsState>((set) => ({
       const info = await lumenApi().loadModel(id, {}) as LoadedModelInfo;
       set({ loaded: info, loading: false });
     } catch (e: any) {
-      set({ error: e?.message ?? String(e), loading: false });
+      const active = await lumenApi().getLoadedModel().catch(() => null) as LoadedModelInfo | null;
+      set({ loaded: active, error: e?.message ?? String(e), loading: false });
       throw e;
     }
   },

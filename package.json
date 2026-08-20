@@ -1,6 +1,6 @@
 {
   "name": "lumen-studio",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Lumen Studio - Local AI desktop app. Run LLMs locally with GPU acceleration.",
   "main": "dist-electron/main.js",
   "author": "Lumen Studio",
@@ -21,7 +21,8 @@
     "package:mac:arm64": "npm run build && electron-builder --mac dmg --arm64 --publish never",
     "preview": "vite preview",
     "lint": "tsc --noEmit && tsc -p electron/tsconfig.json --noEmit",
-    "test:paths": "npm run build:electron && node scripts/test-paths.mjs"
+    "test:paths": "npm run build:electron && node scripts/test-paths.mjs",
+    "test:backend-switch": "npm run build:electron && node scripts/test-backend-switch.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",

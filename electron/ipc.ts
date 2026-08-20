@@ -207,8 +207,8 @@ export function registerIpcHandlers(ctx: IpcContext) {
     if (!w) return;
     if (evt.type === "token") w.webContents.send("llm:token", evt);
     else if (evt.type === "stats") w.webContents.send("llm:stats", evt);
-    else if (evt.type === "error") w.webContents.send("llm:token", { type: "error", error: evt.error });
-    else if (evt.type === "done") w.webContents.send("llm:token", { type: "done", text: evt.text, aborted: evt.aborted });
+    else if (evt.type === "error") w.webContents.send("llm:token", evt);
+    else if (evt.type === "done") w.webContents.send("llm:token", evt);
   });
 
   // ---------------- Chats ----------------

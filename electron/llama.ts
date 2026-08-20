@@ -33,6 +33,7 @@ let context: LlamaContext | null = null;
 let activeSession: LlamaChatSession | null = null;
 let loadedInfo: LoadedState | null = null;
 let activeAbort: { aborted: boolean } | null = null;
+let activeGeneration: Promise<void> | null = null;
 let runtimePreference: AppSettings["gpuBackend"] | null = null;
 let runtimeBackend = "uninitialized";
 // Used to send load progress to the renderer
@@ -91,6 +92,14 @@ export async function shutdownLlama() {
 }
 
 export async function disposeLlama() {
+  if (activeAbort) activeAbort.aborted = true;
+  if (activeGeneration) {
+    try {
+      await activeGeneration;
+    } catch {
+      // The generation path reports its own error or abort event.
+    }
+  }
   try {
     if (activeSession) activeSession = null;
     if (context) {
@@ -222,7 +231,7 @@ export function normalizeGenerationOptions(opts: ChatPayload["opts"], contextSiz
 
 export async function streamChat(payload: ChatPayload, getWin: () => BrowserWindow | null) {
   if (!activeSession) {
-    emitter.emit("event", { type: "error", error: "No model loaded" });
+    emitter.emit("event", { type: "error", error: "No model loaded", conversationId: payload.conversationId });
     return;
   }
   if (activeAbort) activeAbort.aborted = true;
@@ -236,7 +245,7 @@ export async function streamChat(payload: ChatPayload, getWin: () => BrowserWind
   // Build chat history items: system + all user/assistant up to last user
   const lastUserIdx = [...messages].map((m) => m.role).lastIndexOf("user");
   if (lastUserIdx === -1) {
-    emitter.emit("event", { type: "error", error: "No user message" });
+    emitter.emit("event", { type: "error", error: "No user message", conversationId: payload.conversationId });
     return;
   }
 
@@ -277,7 +286,7 @@ export async function streamChat(payload: ChatPayload, getWin: () => BrowserWind
   const abortWatcher = abortSignalFrom(abortFlag);
 
   try {
-    const reply = await session.prompt(userPrompt, {
+    const promptPromise = session.prompt(userPrompt, {
       temperature: generation.temperature,
       topK: generation.topK,
       topP: generation.topP,
@@ -292,6 +301,9 @@ export async function streamChat(payload: ChatPayload, getWin: () => BrowserWind
         send({ type: "token", text: chunk, conversationId: payload.conversationId });
       },
     });
+    const generationDone = promptPromise.then(() => undefined, () => undefined);
+    activeGeneration = generationDone;
+    const reply = await promptPromise;
 
     const elapsed = (Date.now() - start) / 1000;
     const tps = tokens / Math.max(0.1, elapsed);
@@ -301,11 +313,12 @@ export async function streamChat(payload: ChatPayload, getWin: () => BrowserWind
     if (abortFlag.aborted) {
       send({ type: "done", aborted: true, conversationId: payload.conversationId });
     } else {
-      send({ type: "error", error: err?.message ?? String(err) });
+      send({ type: "error", error: err?.message ?? String(err), conversationId: payload.conversationId });
     }
   } finally {
     abortWatcher.dispose();
     if (activeAbort === abortFlag) activeAbort = null;
+    activeGeneration = null;
   }
 }
 

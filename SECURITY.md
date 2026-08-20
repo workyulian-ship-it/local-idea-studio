@@ -12,7 +12,7 @@ Never attach Hugging Face tokens, private model URLs, chats, settings files, log
 
 ## Release verification
 
-The Windows v0.1.0 installer is not code-signed. Confirm its SHA-256 digest using:
+The Windows v0.1.4 installer is not code-signed. Confirm its SHA-256 digest using:
 
 ```powershell
 Get-FileHash -Algorithm SHA256 '.\Local Idea Studio-0.1.4-win-x64.exe'

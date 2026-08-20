@@ -1,1 +1,1 @@
-d8a18addda51e60cc26a46bee805a7d82d919185fa3fd7c7af21995753ae6cf7  Local Idea Studio-0.1.4-win-x64.exe
+b72baf72db177fd003be86cc250f5bbaf47eb7c68e17330fac9d2fd48e1d812b  Local Idea Studio-0.1.5-win-x64.exe

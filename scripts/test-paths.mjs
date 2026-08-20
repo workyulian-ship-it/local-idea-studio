@@ -27,6 +27,13 @@ try {
   fs.writeFileSync(path.join(legacyRoot, "settings.json"), "{}");
   assert.equal(resolveAiRoot({ documentsDir, legacyRoot }), legacyRoot);
 
+  const oldDocumentsRoot = path.join(documentsDir, "Lumen Studio");
+  fs.mkdirSync(path.join(oldDocumentsRoot, "models"), { recursive: true });
+  assert.equal(
+    resolveAiRoot({ documentsDir, legacyRoots: [oldDocumentsRoot, legacyRoot] }),
+    oldDocumentsRoot
+  );
+
   console.log("Portable storage path tests passed.");
 } finally {
   fs.rmSync(tempRoot, { recursive: true, force: true });

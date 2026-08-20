@@ -14,6 +14,7 @@ export interface ResolveAiRootOptions {
   documentsDir: string;
   configuredRoot?: string;
   legacyRoot?: string;
+  legacyRoots?: string[];
 }
 
 /**
@@ -26,11 +27,14 @@ export function resolveAiRoot(options: ResolveAiRootOptions): string {
   const configured = options.configuredRoot?.trim();
   if (configured) return path.resolve(configured);
 
-  const legacy = options.legacyRoot?.trim();
-  if (legacy) {
+  const legacyCandidates = [options.legacyRoot, ...(options.legacyRoots ?? [])]
+    .map((candidate) => candidate?.trim())
+    .filter((candidate): candidate is string => Boolean(candidate));
+  for (const legacy of legacyCandidates) {
     const hasLegacyData = fs.existsSync(path.join(legacy, ".local-idea-root.json"))
       || fs.existsSync(path.join(legacy, ".lumen-root.json"))
-      || fs.existsSync(path.join(legacy, "settings.json"));
+      || fs.existsSync(path.join(legacy, "settings.json"))
+      || fs.existsSync(path.join(legacy, "models"));
     if (hasLegacyData) return path.resolve(legacy);
   }
 

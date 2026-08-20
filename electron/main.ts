@@ -13,10 +13,13 @@ const __dirname = path.dirname(__filename);
 const LEGACY_WINDOWS_AI_ROOT = "D:\\LLM AI";
 
 function initializeStorage(): StoragePaths {
+  const documentsDir = app.getPath("documents");
   const preferredRoot = resolveAiRoot({
     configuredRoot: process.env.LOCAL_IDEA_AI_ROOT || process.env.LUMEN_AI_ROOT,
-    documentsDir: app.getPath("documents"),
-    legacyRoot: process.platform === "win32" ? LEGACY_WINDOWS_AI_ROOT : undefined,
+    documentsDir,
+    legacyRoots: process.platform === "win32"
+      ? [path.join(documentsDir, "Lumen Studio"), LEGACY_WINDOWS_AI_ROOT]
+      : [path.join(documentsDir, "Lumen Studio")],
   });
 
   try {

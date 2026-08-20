@@ -206,7 +206,7 @@ export function SettingsPanel() {
             label="GPU layers (-1 = all)" value={settings.gpuLayers} min={-1} max={99} step={1}
             onChange={(v) => update({ gpuLayers: v })}
             format={(v) => (v === -1 ? "all" : v.toString())}
-            hint="Number of layers to offload to GPU (Vulkan)"
+            hint="Number of model layers to offload through CUDA or Vulkan"
           />
           <div>
             <div className="text-xs text-text-muted mb-1.5">GPU backend</div>
@@ -215,11 +215,12 @@ export function SettingsPanel() {
               onChange={(e) => update({ gpuBackend: e.target.value as any })}
               className="input"
             >
-              <option value="auto">Auto-detect (Vulkan if available)</option>
+              <option value="auto">Auto-detect (CUDA preferred, then Vulkan)</option>
+              <option value="cuda">CUDA (NVIDIA RTX/GTX)</option>
               <option value="vulkan">Vulkan (AMD/NVIDIA/Intel GPU)</option>
               <option value="cpu">CPU only</option>
             </select>
-            <div className="text-[10px] text-text-dim mt-1">The selected backend is enforced when a model is loaded or reloaded.</div>
+            <div className="text-[10px] text-text-dim mt-1">Auto uses the fastest supported backend detected. Reload the model after changing this setting.</div>
           </div>
           <div>
             <div className="text-xs text-text-muted mb-1.5">Threads (0 = auto)</div>

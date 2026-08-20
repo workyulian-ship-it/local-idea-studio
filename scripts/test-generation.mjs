@@ -9,7 +9,7 @@ import {
 const modelPath = process.argv[2];
 if (!modelPath) throw new Error("Pass a GGUF model path");
 const backend = process.argv[3] ?? "auto";
-if (!["auto", "vulkan", "cpu"].includes(backend)) throw new Error(`Unsupported backend: ${backend}`);
+if (!["auto", "cuda", "vulkan", "cpu"].includes(backend)) throw new Error(`Unsupported backend: ${backend}`);
 
 const baseSettings = {
   temperature: 0.7,
@@ -65,6 +65,7 @@ try {
   await initLlama("", "", backend);
   const info = await loadModel(modelPath, { settings: baseSettings });
   if (backend === "cpu" && info.backend !== "cpu") throw new Error(`CPU requested but ${info.backend} was used`);
+  if (backend === "cuda" && info.backend !== "cuda") throw new Error(`CUDA requested but ${info.backend} was used`);
   if (backend === "vulkan" && info.backend !== "vulkan") throw new Error(`Vulkan requested but ${info.backend} was used`);
   console.log(`Loaded on ${info.backend}: trained context ${info.trainContextSize}, active context ${info.contextSize}, output cap ${info.maxOutputTokens}`);
 

@@ -1,6 +1,6 @@
 {
   "name": "lumen-studio",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Lumen Studio - Local AI desktop app. Run LLMs locally with GPU acceleration.",
   "main": "dist-electron/main.js",
   "author": "Lumen Studio",

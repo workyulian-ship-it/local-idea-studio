@@ -135,7 +135,7 @@ export interface AppSettings {
   modelsDirectory: string | null;
   contextSize: number;
   gpuLayers: number;
-  gpuBackend: "auto" | "vulkan" | "cpu";
+  gpuBackend: "auto" | "cuda" | "vulkan" | "cpu";
   threads: number;
   flashAttention: boolean;
   mlock: boolean;

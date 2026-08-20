@@ -106,7 +106,7 @@ export function ChatView() {
             <div className="mt-6 grid grid-cols-3 gap-2 text-xs">
               {[
                 { label: "Private", desc: "100% on-device" },
-                { label: "GPU accelerated", desc: "Vulkan + Radeon" },
+                { label: "GPU accelerated", desc: "CUDA + Vulkan" },
                 { label: "Hugging Face", desc: "GGUF downloads" },
               ].map((c) => (
                 <div key={c.label} className="panel p-3">

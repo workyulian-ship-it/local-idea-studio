@@ -14,7 +14,7 @@ export interface AppSettings {
   // Model
   contextSize: number;
   gpuLayers: number; // -1 = all
-  gpuBackend: "auto" | "vulkan" | "cpu";
+  gpuBackend: "auto" | "cuda" | "vulkan" | "cpu";
   threads: number;
   // Performance (default ON for max speed)
   flashAttention: boolean;
@@ -117,6 +117,9 @@ function normalizeSettings(settings: AppSettings): AppSettings {
     seed: settings.seed == null ? null : numberInRange(settings.seed, 0, -2147483648, 2147483647, true),
     contextSize: numberInRange(settings.contextSize, defaultSettings.contextSize, 512, 1048576, true),
     gpuLayers: numberInRange(settings.gpuLayers, defaultSettings.gpuLayers, -1, 999, true),
+    gpuBackend: (["auto", "cuda", "vulkan", "cpu"] as const).includes(settings.gpuBackend)
+      ? settings.gpuBackend
+      : defaultSettings.gpuBackend,
     threads: numberInRange(settings.threads, defaultSettings.threads, 0, 256, true),
     modelProfiles: profiles,
     modelsDirectory: typeof settings.modelsDirectory === "string" && settings.modelsDirectory.trim()

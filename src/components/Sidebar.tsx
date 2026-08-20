@@ -54,7 +54,7 @@ export function Sidebar() {
           </div>
           <div className="min-w-0">
             <div className="text-sm font-semibold leading-tight truncate">Lumen Studio</div>
-            <div className="text-[10px] text-text-dim leading-tight truncate">Local AI · Vulkan</div>
+            <div className="text-[10px] text-text-dim leading-tight truncate">Local AI · CUDA / Vulkan</div>
           </div>
         </div>
         <button

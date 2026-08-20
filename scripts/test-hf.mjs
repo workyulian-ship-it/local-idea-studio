@@ -2,7 +2,7 @@ import { hfSearch, hfGetFiles } from "../dist-electron/huggingface.js";
 import os from "node:os";
 import path from "node:path";
 
-const cacheDir = path.join(os.tmpdir(), "lumen-studio-hf-test-cache");
+const cacheDir = path.join(os.tmpdir(), "local-idea-studio-hf-test-cache");
 
 function formatBytes(bytes) {
   if (!Number.isFinite(bytes)) return "unknown size";

@@ -59,7 +59,7 @@ export function registerIpcHandlers(ctx: IpcContext) {
   ipcMain.handle("system:select-models-directory", async (_e, current?: string) => {
     const parent = win();
     const options = {
-      title: "Choose where Lumen Studio stores GGUF models",
+      title: "Choose where Local Idea Studio stores GGUF models",
       defaultPath: current || await getActiveModelsDir(),
       buttonLabel: "Use this folder",
       properties: ["openDirectory", "createDirectory"] as Array<"openDirectory" | "createDirectory">,

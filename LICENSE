@@ -1,9 +1,9 @@
-LUMEN STUDIO END USER LICENSE AGREEMENT
+LOCAL IDEA STUDIO END USER LICENSE AGREEMENT
 Version 0.1.0 — Effective 20 August 2026
 
-IMPORTANT: READ THIS AGREEMENT CAREFULLY. BY SELECTING “I ACCEPT” OR INSTALLING, COPYING, LAUNCHING, OR USING LUMEN STUDIO (THE “SOFTWARE”), YOU AGREE TO THIS END USER LICENSE AGREEMENT (“AGREEMENT”). IF YOU DO NOT AGREE, DO NOT INSTALL OR USE THE SOFTWARE.
+IMPORTANT: READ THIS AGREEMENT CAREFULLY. BY SELECTING “I ACCEPT” OR INSTALLING, COPYING, LAUNCHING, OR USING LOCAL IDEA STUDIO (THE “SOFTWARE”), YOU AGREE TO THIS END USER LICENSE AGREEMENT (“AGREEMENT”). IF YOU DO NOT AGREE, DO NOT INSTALL OR USE THE SOFTWARE.
 
-This Agreement is between you (“User”) and the owner and publisher of Lumen Studio (“Licensor”). The Software is licensed, not sold. This Agreement concerns Lumen Studio’s original executable code, interface, artwork, documentation, and other original materials. Third-party and open-source components remain governed by their respective licenses.
+This Agreement is between you (“User”) and the owner and publisher of Local Idea Studio (“Licensor”). The Software is licensed, not sold. This Agreement concerns Local Idea Studio’s original executable code, interface, artwork, documentation, and other original materials. Third-party and open-source components remain governed by their respective licenses.
 
 1. FREE PERSONAL LICENSE
 Licensor grants you a limited, revocable, non-exclusive, non-transferable license to install and use the Software, free of charge, for lawful personal or internal business purposes on devices you control. You may make a reasonable backup copy solely for recovery.
@@ -17,7 +17,7 @@ Except where applicable law expressly gives you a right that cannot be waived, y
 (b) sell, rent, sublicense, host, mirror, republish, or provide the Software to others as your own product;
 (c) modify, translate, adapt, create derivative versions, remove notices, or falsely claim authorship;
 (d) reverse engineer, decompile, disassemble, bypass license or security controls, or attempt to obtain non-public source code;
-(e) use the Lumen Studio name, logo, design, or confusingly similar branding for another product; or
+(e) use the Local Idea Studio name, logo, design, or confusingly similar branding for another product; or
 (f) use the Software unlawfully, maliciously, or to violate another person’s rights.
 
 4. LOCAL AI AND THIRD-PARTY MODELS
@@ -32,7 +32,7 @@ TO THE MAXIMUM EXTENT PERMITTED BY LAW, LICENSOR IS NOT RESPONSIBLE FOR HARDWARE
 AI output may be incorrect, incomplete, biased, unsafe, offensive, or fabricated. It is not professional medical, legal, financial, safety, or other expert advice. You are responsible for reviewing outputs before relying on, publishing, executing, or sharing them. Never run generated code or commands without understanding and checking them.
 
 7. PRIVACY AND NETWORK ACCESS
-Lumen Studio is designed to process chats locally. Chats, settings, and locally stored models remain on your selected storage device unless you move or share them. Features that search or download models contact third-party services such as Hugging Face, and opening external links contacts the destination service. Those services apply their own privacy policies. The Software does not promise anonymity, and Licensor is not responsible for operating-system, network-provider, model-provider, or third-party data practices.
+Local Idea Studio is designed to process chats locally. Chats, settings, and locally stored models remain on your selected storage device unless you move or share them. Features that search or download models contact third-party services such as Hugging Face, and opening external links contacts the destination service. Those services apply their own privacy policies. The Software does not promise anonymity, and Licensor is not responsible for operating-system, network-provider, model-provider, or third-party data practices.
 
 8. BACKUPS AND SECURITY
 You must maintain backups of important data and protect access to your device. The Software is not a backup, cybersecurity, access-control, or safety-critical system. Do not use it where failure could cause death, injury, environmental harm, or major property damage.
@@ -59,4 +59,3 @@ You are responsible for complying with applicable laws, export controls, sanctio
 If a provision is unenforceable, it will be limited or removed only to the minimum extent necessary, and the remainder will continue. Failure to enforce a provision is not a waiver. This Agreement is the complete agreement regarding the Software and does not override rights that applicable law says cannot be waived. The governing law and courts are those applicable to Licensor’s principal place of residence, subject to mandatory consumer-protection rules in your country.
 
 BY SELECTING “I ACCEPT,” YOU CONFIRM THAT YOU HAVE READ, UNDERSTOOD, AND AGREED TO THIS AGREEMENT AND THAT YOU ACCEPT THE COMPUTING, HARDWARE, DATA, AND AI-OUTPUT RISKS DESCRIBED ABOVE.
-

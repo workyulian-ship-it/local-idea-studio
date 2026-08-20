@@ -59,7 +59,7 @@ async function writeCache(cacheDir: string, key: string, data: unknown) {
 
 function hfHeaders(token?: string): Record<string, string> {
   const headers: Record<string, string> = {
-    "User-Agent": "LumenStudio/0.1.0",
+    "User-Agent": "LocalIdeaStudio/0.1.4",
     Accept: "application/json",
   };
   if (token?.trim()) headers.Authorization = `Bearer ${token.trim()}`;

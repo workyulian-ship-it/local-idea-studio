@@ -45,7 +45,7 @@ export default function App() {
   return (
     <div className="h-screen w-screen flex flex-col bg-bg text-text overflow-hidden">
       <div className="h-9 shrink-0 bg-bg-panel border-b border-border drag-region flex items-center px-3 no-drag">
-        <span className="text-[11px] text-text-dim">Lumen Studio</span>
+        <span className="text-[11px] text-text-dim">Local Idea Studio</span>
         <div className="ml-auto text-[10px] text-text-dim flex items-center gap-2">
           {ready ? <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-success" /> ready</span> : <span>loading…</span>}
         </div>

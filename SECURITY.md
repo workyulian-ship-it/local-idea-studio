@@ -15,8 +15,7 @@ Never attach Hugging Face tokens, private model URLs, chats, settings files, log
 The Windows v0.1.0 installer is not code-signed. Confirm its SHA-256 digest using:
 
 ```powershell
-Get-FileHash -Algorithm SHA256 '.\Lumen Studio-0.1.0-win-x64.exe'
+Get-FileHash -Algorithm SHA256 '.\Local Idea Studio-0.1.4-win-x64.exe'
 ```
 
 Compare the result with [`SHA256SUMS.txt`](./SHA256SUMS.txt). A different digest means the file must not be trusted or executed.
-

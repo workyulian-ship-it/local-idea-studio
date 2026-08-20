@@ -10,10 +10,10 @@ module.exports = async function afterPack(context) {
     "file-version": context.packager.appInfo.version,
     "product-version": context.packager.appInfo.version,
     "version-string": {
-      CompanyName: "Lumen Studio",
-      FileDescription: "Lumen Studio Local AI",
-      LegalCopyright: "Copyright © 2026 Lumen Studio",
-      ProductName: "Lumen Studio",
+      CompanyName: "Local Idea Studio",
+      FileDescription: "Local Idea Studio - Private Local AI",
+      LegalCopyright: "Copyright © 2026 Local Idea Studio",
+      ProductName: "Local Idea Studio",
     },
     "requested-execution-level": "asInvoker",
   });

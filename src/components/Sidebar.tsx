@@ -53,7 +53,7 @@ export function Sidebar() {
             <Sparkles className="w-4 h-4 text-accent" />
           </div>
           <div className="min-w-0">
-            <div className="text-sm font-semibold leading-tight truncate">Lumen Studio</div>
+            <div className="text-sm font-semibold leading-tight truncate">Local Idea Studio</div>
             <div className="text-[10px] text-text-dim leading-tight truncate">Local AI · CUDA / Vulkan</div>
           </div>
         </div>

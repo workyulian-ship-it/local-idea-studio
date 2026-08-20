@@ -57,7 +57,7 @@ function artSvg(width, height, sidebar) {
       <path d="M28.5 22.5V39.5H41" fill="none" stroke="white" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round"/>
       <circle cx="41" cy="39.5" r="2.9" fill="#c9ff67"/>
     </g>
-    ${sidebar ? `<text x="82" y="190" text-anchor="middle" fill="white" font-family="Segoe UI,Arial" font-size="20" font-weight="700">LUMEN</text><text x="82" y="211" text-anchor="middle" fill="#b8a7ef" font-family="Segoe UI,Arial" font-size="9" letter-spacing="2">STUDIO</text><rect x="34" y="238" width="96" height="1" fill="#7c5cff"/><text x="82" y="264" text-anchor="middle" fill="#c7bddf" font-family="Segoe UI,Arial" font-size="9">LOCAL AI</text><text x="82" y="279" text-anchor="middle" fill="#c7bddf" font-family="Segoe UI,Arial" font-size="9">YOUR MACHINE</text>` : `<text x="57" y="25" fill="white" font-family="Segoe UI,Arial" font-size="15" font-weight="700">Lumen Studio</text><text x="57" y="41" fill="#b8a7ef" font-family="Segoe UI,Arial" font-size="9">Private local AI</text>`}
+    ${sidebar ? `<text x="82" y="184" text-anchor="middle" fill="white" font-family="Segoe UI,Arial" font-size="17" font-weight="700">LOCAL IDEA</text><text x="82" y="207" text-anchor="middle" fill="#b8a7ef" font-family="Segoe UI,Arial" font-size="9" letter-spacing="2">STUDIO</text><rect x="34" y="238" width="96" height="1" fill="#7c5cff"/><text x="82" y="264" text-anchor="middle" fill="#c7bddf" font-family="Segoe UI,Arial" font-size="9">PRIVATE AI</text><text x="82" y="279" text-anchor="middle" fill="#c7bddf" font-family="Segoe UI,Arial" font-size="9">YOUR MACHINE</text>` : `<text x="57" y="25" fill="white" font-family="Segoe UI,Arial" font-size="14" font-weight="700">Local Idea Studio</text><text x="57" y="41" fill="#b8a7ef" font-family="Segoe UI,Arial" font-size="9">Private local AI</text>`}
   </svg>`);
 }
 
@@ -79,4 +79,4 @@ async function writeBmp(file, width, height, svg) {
 await writeBmp("installerSidebar.bmp", 164, 314, artSvg(164, 314, true));
 await writeBmp("uninstallerSidebar.bmp", 164, 314, artSvg(164, 314, true));
 await writeBmp("installerHeader.bmp", 150, 57, artSvg(150, 57, false));
-console.log("Lumen Studio brand assets generated.");
+console.log("Local Idea Studio brand assets generated.");

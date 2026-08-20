@@ -57,7 +57,7 @@ const files: HfFile[] = [
   { rfilename: "Meta-Llama-3.1-8B-Instruct-Q8_0.gguf", size: 8540775840, quantization: "Q8_0" },
 ];
 
-const mockAiRoot = "C:\\Users\\You\\Documents\\Lumen Studio";
+const mockAiRoot = "C:\\Users\\You\\Documents\\Local Idea Studio";
 const mockModelsDir = `${mockAiRoot}\\models`;
 
 const mockLocalModel: LocalModel = {

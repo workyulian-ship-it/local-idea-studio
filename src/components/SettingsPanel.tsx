@@ -329,7 +329,7 @@ export function SettingsPanel() {
         </Section>
 
         <div className="text-center text-[10px] text-text-dim pt-4">
-          Lumen Studio · all inference runs on your machine
+          Local Idea Studio · all inference runs on your machine
         </div>
       </div>
     </div>

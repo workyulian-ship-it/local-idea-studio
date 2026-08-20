@@ -1,6 +1,6 @@
-# Lumen Studio
+# Local Idea Studio
 
-Lumen Studio is a Windows desktop application for discovering, downloading, and running compatible GGUF language models locally. It provides one interface for Hugging Face model search, model downloads, local chats, and llama.cpp runtime controls.
+Local Idea Studio is a Windows desktop application for discovering, downloading, and running compatible GGUF language models locally. It provides one interface for Hugging Face model search, model downloads, local chats, and llama.cpp runtime controls.
 
 Official website: https://lumen-studio-local-ai.lush-flute-8657.chatgpt.site/
 
@@ -11,7 +11,8 @@ Official website: https://lumen-studio-local-ai.lush-flute-8657.chatgpt.site/
 - CPU, NVIDIA CUDA, and cross-vendor Vulkan GPU runtime options
 - Automatic backend selection prefers CUDA on supported NVIDIA hardware, with explicit CUDA, Vulkan, and CPU choices in Settings
 - Hugging Face GGUF search and downloads
-- Models stored by default in the current user's `Documents/Lumen Studio/models` folder
+- Models stored by default in the current user's `Documents/Local Idea Studio/models` folder
+- Existing Lumen Studio installations retain their selected storage path so downloaded models remain visible after the rename
 - Configurable model storage directory for any available local drive
 - Per-model generation and context settings
 - Local chat and settings storage
@@ -55,4 +56,4 @@ Please read [`SECURITY.md`](./SECURITY.md) before reporting a vulnerability. Do 
 
 ## License
 
-The source is publicly visible for transparency, auditing, and trust, but Lumen Studio is **source-available proprietary software**, not an open-source project. Use and redistribution are governed by [`LICENSE`](./LICENSE). Third-party dependencies keep their own licenses.
+The source is publicly visible for transparency, auditing, and trust, but Local Idea Studio is **source-available proprietary software**, not an open-source project. Use and redistribution are governed by [`LICENSE`](./LICENSE). Third-party dependencies keep their own licenses.

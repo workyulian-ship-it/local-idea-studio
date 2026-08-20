@@ -1,14 +1,14 @@
 {
-  "name": "lumen-studio",
-  "version": "0.1.3",
-  "description": "Lumen Studio - Local AI desktop app. Run LLMs locally with GPU acceleration.",
+  "name": "local-idea-studio",
+  "version": "0.1.4",
+  "description": "Local Idea Studio - Private local AI desktop app with CPU, CUDA, and Vulkan acceleration.",
   "main": "dist-electron/main.js",
-  "author": "Lumen Studio",
+  "author": "Local Idea Studio",
   "license": "UNLICENSED",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "concurrently -k -n VITE,ELECTRON -c cyan,magenta \"vite\" \"wait-on http://localhost:5173 && tsc -p electron/tsconfig.json && cross-env LUMEN_DEV=1 electron .\"",
+    "dev": "concurrently -k -n VITE,ELECTRON -c cyan,magenta \"vite\" \"wait-on http://localhost:5173 && tsc -p electron/tsconfig.json && cross-env LOCAL_IDEA_DEV=1 electron .\"",
     "build:renderer": "vite build",
     "build:electron": "tsc -p electron/tsconfig.json && node -e \"require('fs').copyFileSync('electron/preload.cjs','dist-electron/preload.cjs')\"",
     "build:assets": "node scripts/build-brand-assets.mjs",
@@ -56,9 +56,9 @@
     "wait-on": "^8.0.1"
   },
   "build": {
-    "appId": "com.lumen.studio",
-    "productName": "Lumen Studio",
-    "copyright": "Lumen Studio",
+    "appId": "com.localidea.studio",
+    "productName": "Local Idea Studio",
+    "copyright": "Local Idea Studio",
     "afterPack": "scripts/after-pack.cjs",
     "files": [
       "dist/**/*",
@@ -111,7 +111,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Lumen Studio",
+      "shortcutName": "Local Idea Studio",
       "deleteAppDataOnUninstall": false,
       "license": "build/license.txt",
       "installerIcon": "build/installerIcon.ico",

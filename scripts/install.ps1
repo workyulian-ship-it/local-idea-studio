@@ -1,12 +1,12 @@
-# Install Lumen Studio for the current Windows user and create Start Menu + Desktop shortcuts
+# Install Local Idea Studio for the current Windows user and create Start Menu + Desktop shortcuts
 $ErrorActionPreference = "Stop"
 
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $InstallBase = Join-Path $env:LOCALAPPDATA "Programs"
 $Source      = Join-Path $ProjectRoot "release-artifacts\win-unpacked"
-$InstallDir  = Join-Path $InstallBase "Lumen Studio"
-$AppName     = "Lumen Studio"
-$ExeName     = "Lumen Studio.exe"
+$InstallDir  = Join-Path $InstallBase "Local Idea Studio"
+$AppName     = "Local Idea Studio"
+$ExeName     = "Local Idea Studio.exe"
 $ExePath     = Join-Path $InstallDir $ExeName
 
 function Assert-ChildPath($path, $parent, $label) {

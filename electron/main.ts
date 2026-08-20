@@ -14,7 +14,7 @@ const LEGACY_WINDOWS_AI_ROOT = "D:\\LLM AI";
 
 function initializeStorage(): StoragePaths {
   const preferredRoot = resolveAiRoot({
-    configuredRoot: process.env.LUMEN_AI_ROOT,
+    configuredRoot: process.env.LOCAL_IDEA_AI_ROOT || process.env.LUMEN_AI_ROOT,
     documentsDir: app.getPath("documents"),
     legacyRoot: process.platform === "win32" ? LEGACY_WINDOWS_AI_ROOT : undefined,
   });
@@ -61,7 +61,7 @@ function createWindow() {
     mainWindow?.show();
   });
 
-  const devUrl = process.env.VITE_DEV_SERVER_URL || (process.env.LUMEN_DEV ? "http://localhost:5173" : null);
+  const devUrl = process.env.VITE_DEV_SERVER_URL || (process.env.LOCAL_IDEA_DEV ? "http://localhost:5173" : null);
   if (devUrl) {
     mainWindow.loadURL(devUrl);
     mainWindow.webContents.openDevTools({ mode: "detach" });

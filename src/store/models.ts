@@ -4,7 +4,7 @@ import type { LocalModel, HfSearchResult, HfFile, LoadedModelInfo } from "../typ
 function lumenApi() {
   const api = window.lumen;
   if (!api) {
-    throw new Error("Lumen desktop bridge is not loaded. Close Lumen Studio fully and open it again.");
+    throw new Error("The desktop bridge is not loaded. Close Local Idea Studio fully and open it again.");
   }
   return api;
 }

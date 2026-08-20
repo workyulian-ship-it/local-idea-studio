@@ -28,12 +28,13 @@ export function resolveAiRoot(options: ResolveAiRootOptions): string {
 
   const legacy = options.legacyRoot?.trim();
   if (legacy) {
-    const hasLegacyData = fs.existsSync(path.join(legacy, ".lumen-root.json"))
+    const hasLegacyData = fs.existsSync(path.join(legacy, ".local-idea-root.json"))
+      || fs.existsSync(path.join(legacy, ".lumen-root.json"))
       || fs.existsSync(path.join(legacy, "settings.json"));
     if (hasLegacyData) return path.resolve(legacy);
   }
 
-  return path.join(path.resolve(options.documentsDir), "Lumen Studio");
+  return path.join(path.resolve(options.documentsDir), "Local Idea Studio");
 }
 
 export function createStoragePaths(aiRoot: string): StoragePaths {
@@ -52,7 +53,7 @@ export function createStoragePaths(aiRoot: string): StoragePaths {
   }
 
   fs.writeFileSync(
-    path.join(paths.aiRoot, ".lumen-root.json"),
+    path.join(paths.aiRoot, ".local-idea-root.json"),
     JSON.stringify({ root: paths.aiRoot, models: paths.modelsDir, chats: paths.chatsDir }, null, 2)
   );
 

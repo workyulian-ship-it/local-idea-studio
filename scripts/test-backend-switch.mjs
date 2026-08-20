@@ -6,8 +6,8 @@ import {
   streamChat,
 } from "../dist-electron/llama.js";
 
-const modelPath = process.argv[2] || process.env.LUMEN_TEST_MODEL;
-if (!modelPath) throw new Error("Pass a GGUF model path or set LUMEN_TEST_MODEL");
+const modelPath = process.argv[2] || process.env.LOCAL_IDEA_TEST_MODEL || process.env.LUMEN_TEST_MODEL;
+if (!modelPath) throw new Error("Pass a GGUF model path or set LOCAL_IDEA_TEST_MODEL");
 
 const baseSettings = {
   temperature: 0,

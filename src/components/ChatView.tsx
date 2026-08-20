@@ -34,7 +34,7 @@ export function ChatView() {
             <div className="w-16 h-16 mx-auto rounded-2xl bg-accent/20 flex items-center justify-center mb-4">
               <Sparkles className="w-8 h-8 text-accent" />
             </div>
-            <h1 className="text-3xl font-semibold mb-2">Welcome to Lumen Studio</h1>
+            <h1 className="text-3xl font-semibold mb-2">Welcome to Local Idea Studio</h1>
             <p className="text-text-muted text-sm mb-6">
               Run large language models locally on your AMD Radeon GPU. Everything stays on your machine.
             </p>
@@ -46,7 +46,7 @@ export function ChatView() {
                   <h2 className="font-semibold">Get your first model</h2>
                 </div>
                 <p className="text-xs text-text-muted mb-3">
-                  Browse and download GGUF models directly from Hugging Face — they save to your local Lumen Studio models folder.
+                  Browse and download GGUF models directly from Hugging Face — they save to your Local Idea Studio models folder.
                 </p>
                 <button onClick={() => setView("library")} className="btn-primary">
                   Open Model Library

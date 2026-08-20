@@ -28,7 +28,6 @@ jobs:
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
-          name: lumen-studio-windows-x64
+          name: local-idea-studio-windows-x64
           path: release-artifacts/*.exe
           if-no-files-found: error
-

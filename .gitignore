@@ -1,0 +1,14 @@
+node_modules
+dist
+dist-electron
+release
+release-artifacts
+*.log
+.DS_Store
+.env
+.env.local
+.lumen-root.json
+settings.json
+chats/
+models/
+cache/

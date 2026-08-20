@@ -1,0 +1,2 @@
+fde3d8273e96bec81f8babb95ce45c0a1c8c61f64d584e22fa722c9ddfda40b5  Lumen Studio-0.1.0-win-x64.exe
+

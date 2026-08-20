@@ -1,0 +1,148 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  html, body, #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-bg text-text antialiased font-sans;
+    margin: 0;
+    overflow: hidden;
+  }
+  /* Custom scrollbars */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2a2a30; border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background: #3a3a42; background-clip: padding-box; border: 2px solid transparent; }
+}
+
+@layer components {
+  .glass {
+    @apply bg-bg-panel/80 backdrop-blur-md border border-border;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-accent text-white hover:bg-accent-hover px-3 py-1.5;
+  }
+  .btn-secondary {
+    @apply btn bg-bg-elev text-text hover:bg-bg-hover border border-border px-3 py-1.5;
+  }
+  .btn-ghost {
+    @apply btn text-text-muted hover:text-text hover:bg-bg-hover px-2 py-1.5;
+  }
+  .btn-icon {
+    @apply btn-ghost p-1.5;
+  }
+  .input {
+    @apply w-full bg-bg-elev border border-border rounded-md px-3 py-2 text-sm text-text placeholder-text-dim focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/30;
+  }
+  .panel {
+    @apply bg-bg-panel border border-border rounded-lg;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 text-[11px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full;
+  }
+}
+
+/* Markdown styles */
+.prose-md {
+  @apply text-text leading-relaxed text-[15px];
+}
+.prose-md p { @apply my-2; }
+.prose-md h1 { @apply text-2xl font-semibold my-3; }
+.prose-md h2 { @apply text-xl font-semibold my-3; }
+.prose-md h3 { @apply text-lg font-semibold my-2; }
+.prose-md ul { @apply list-disc pl-6 my-2; }
+.prose-md ol { @apply list-decimal pl-6 my-2; }
+.prose-md li { @apply my-1; }
+.prose-md a { @apply text-accent hover:underline; }
+.prose-md code {
+  @apply font-mono text-[13px] bg-bg-elev px-1.5 py-0.5 rounded border border-border;
+}
+.prose-md pre {
+  @apply font-mono text-[13px] bg-bg-elev border border-border rounded-md p-3 my-2 overflow-x-auto;
+}
+.prose-md pre code { @apply bg-transparent border-0 p-0; }
+.prose-md blockquote {
+  @apply border-l-2 border-accent/40 pl-3 italic text-text-muted my-2;
+}
+.prose-md table { @apply border-collapse my-2; }
+.prose-md th, .prose-md td { @apply border border-border px-2 py-1; }
+
+/* highlight.js dark theme subset */
+.hljs { color: #e8e8ea; background: transparent; }
+.hljs-keyword, .hljs-selector-tag, .hljs-built_in, .hljs-name { color: #c4a7ff; }
+.hljs-string, .hljs-attr, .hljs-template-tag, .hljs-symbol { color: #9ed1ff; }
+.hljs-comment, .hljs-quote { color: #6a6a70; font-style: italic; }
+.hljs-number, .hljs-literal, .hljs-variable { color: #ffb38a; }
+.hljs-title, .hljs-section, .hljs-function .hljs-title { color: #7cf2c2; }
+.hljs-tag, .hljs-meta { color: #9a9a9f; }
+.hljs-deletion { color: #ef4444; }
+.hljs-addition { color: #34d399; }
+
+/* Loading shimmer */
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+/* Window drag regions (Electron) */
+.drag-region { -webkit-app-region: drag; user-select: none; }
+.no-drag { -webkit-app-region: no-drag; }
+
+/* Model library adapts to low-resolution and display-scaled Windows screens. */
+.model-library-layout {
+  display: flex;
+}
+.model-search-panel {
+  width: 42%;
+  min-width: 280px;
+  max-width: 480px;
+}
+.model-detail-panel {
+  container-type: inline-size;
+}
+
+@media (max-width: 1199px) {
+  .model-library-layout {
+    flex-direction: column;
+  }
+  .model-search-panel {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    height: 46%;
+    min-height: 250px;
+    border-right-width: 0;
+    border-bottom: 1px solid #222226;
+  }
+  .model-detail-panel {
+    width: 100%;
+    height: 54%;
+    min-height: 280px;
+  }
+}
+
+@container (max-width: 540px) {
+  .model-detail-header-row {
+    flex-wrap: wrap;
+  }
+  .model-detail-header-row > a {
+    width: 100%;
+  }
+  .model-file-card {
+    flex-wrap: wrap;
+  }
+  .model-file-action {
+    flex: 1 0 100%;
+    width: 100%;
+  }
+}

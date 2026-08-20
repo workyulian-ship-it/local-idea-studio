@@ -1,0 +1,61 @@
+LUMEN STUDIO END USER LICENSE AGREEMENT
+Version 0.1.0 — Effective 20 August 2026
+
+IMPORTANT: READ THIS AGREEMENT CAREFULLY. BY SELECTING “I ACCEPT” OR INSTALLING, COPYING, LAUNCHING, OR USING LUMEN STUDIO (THE “SOFTWARE”), YOU AGREE TO THIS END USER LICENSE AGREEMENT (“AGREEMENT”). IF YOU DO NOT AGREE, DO NOT INSTALL OR USE THE SOFTWARE.
+
+This Agreement is between you (“User”) and the owner and publisher of Lumen Studio (“Licensor”). The Software is licensed, not sold. This Agreement concerns Lumen Studio’s original executable code, interface, artwork, documentation, and other original materials. Third-party and open-source components remain governed by their respective licenses.
+
+1. FREE PERSONAL LICENSE
+Licensor grants you a limited, revocable, non-exclusive, non-transferable license to install and use the Software, free of charge, for lawful personal or internal business purposes on devices you control. You may make a reasonable backup copy solely for recovery.
+
+2. OWNERSHIP
+Licensor retains all rights, title, and interest in the Software and its original source code, interface, branding, artwork, documentation, and releases, including all copyright and other intellectual-property rights. No ownership rights are transferred to you.
+
+3. RESTRICTIONS
+Except where applicable law expressly gives you a right that cannot be waived, you may not:
+(a) copy or redistribute the Software except for a permitted backup;
+(b) sell, rent, sublicense, host, mirror, republish, or provide the Software to others as your own product;
+(c) modify, translate, adapt, create derivative versions, remove notices, or falsely claim authorship;
+(d) reverse engineer, decompile, disassemble, bypass license or security controls, or attempt to obtain non-public source code;
+(e) use the Lumen Studio name, logo, design, or confusingly similar branding for another product; or
+(f) use the Software unlawfully, maliciously, or to violate another person’s rights.
+
+4. LOCAL AI AND THIRD-PARTY MODELS
+The Software is a local interface and runtime. It does not include ownership rights to GGUF models, Hugging Face content, drivers, libraries, or other third-party materials. You are responsible for reading and following every model’s license, usage restrictions, and acceptable-use terms. Licensor does not control or endorse third-party models or their outputs.
+
+5. COMPUTING LOAD AND HARDWARE RISK
+Local AI inference can place sustained load on processors, graphics processors, memory, storage, cooling systems, batteries, and power supplies. This may increase temperature, fan speed, power use, component wear, instability, or shutdown risk. You are solely responsible for choosing safe settings; confirming that your hardware, drivers, cooling, power supply, and operating system are suitable; monitoring temperatures and stability; keeping backups; and stopping use if unsafe behavior occurs.
+
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, LICENSOR IS NOT RESPONSIBLE FOR HARDWARE DAMAGE, OVERHEATING, FIRE, ELECTRICAL DAMAGE, BATTERY DAMAGE, DRIVER FAILURE, DATA LOSS, CORRUPTION, LOST WORK, LOST PROFITS, OR OTHER LOSS ARISING FROM INSTALLATION OR USE. THIS DOES NOT EXCLUDE LIABILITY THAT CANNOT LAWFULLY BE EXCLUDED, INCLUDING LIABILITY FOR FRAUD, INTENTIONAL MISCONDUCT, GROSS NEGLIGENCE, OR DEATH OR PERSONAL INJURY WHERE APPLICABLE LAW PROHIBITS EXCLUSION.
+
+6. AI OUTPUTS
+AI output may be incorrect, incomplete, biased, unsafe, offensive, or fabricated. It is not professional medical, legal, financial, safety, or other expert advice. You are responsible for reviewing outputs before relying on, publishing, executing, or sharing them. Never run generated code or commands without understanding and checking them.
+
+7. PRIVACY AND NETWORK ACCESS
+Lumen Studio is designed to process chats locally. Chats, settings, and locally stored models remain on your selected storage device unless you move or share them. Features that search or download models contact third-party services such as Hugging Face, and opening external links contacts the destination service. Those services apply their own privacy policies. The Software does not promise anonymity, and Licensor is not responsible for operating-system, network-provider, model-provider, or third-party data practices.
+
+8. BACKUPS AND SECURITY
+You must maintain backups of important data and protect access to your device. The Software is not a backup, cybersecurity, access-control, or safety-critical system. Do not use it where failure could cause death, injury, environmental harm, or major property damage.
+
+9. NO WARRANTY
+THE SOFTWARE IS PROVIDED “AS IS” AND “AS AVAILABLE,” WITH ALL FAULTS. TO THE MAXIMUM EXTENT PERMITTED BY LAW, LICENSOR DISCLAIMS ALL EXPRESS, IMPLIED, AND STATUTORY WARRANTIES, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, ACCURACY, QUIET ENJOYMENT, NON-INFRINGEMENT, AVAILABILITY, SECURITY, COMPATIBILITY, AND ERROR-FREE OPERATION. LICENSOR DOES NOT WARRANT THAT EVERY GGUF MODEL, DEVICE, DRIVER, OR OPERATING SYSTEM WILL WORK.
+
+10. LIMITATION OF LIABILITY
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, LICENSOR WILL NOT BE LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR FOR LOSS OF DATA, PROFITS, REVENUE, GOODWILL, OPPORTUNITY, OR BUSINESS INTERRUPTION. WHERE LIABILITY CANNOT BE COMPLETELY EXCLUDED, LICENSOR’S TOTAL AGGREGATE LIABILITY RELATED TO THE SOFTWARE WILL NOT EXCEED THE GREATER OF THE AMOUNT YOU PAID FOR THE SOFTWARE DURING THE PRECEDING TWELVE MONTHS OR US $10. THESE LIMITATIONS APPLY REGARDLESS OF THE LEGAL THEORY AND EVEN IF LICENSOR WAS ADVISED THAT LOSS WAS POSSIBLE. YOUR NON-WAIVABLE CONSUMER RIGHTS REMAIN UNAFFECTED.
+
+11. INDEMNITY
+To the extent permitted by law, you agree to defend and indemnify Licensor against third-party claims, damages, and reasonable costs caused by your unlawful use, violation of this Agreement, infringement of third-party rights, distribution of models or outputs, or intentional misuse of the Software.
+
+12. UPDATES AND AVAILABILITY
+Licensor may provide, change, suspend, or discontinue features or releases without guaranteeing continued support. Updates may alter compatibility or requirements. You may stop using the Software at any time.
+
+13. TERMINATION
+This license terminates automatically if you materially violate this Agreement. After termination, you must stop using and delete copies of the Software, except data or third-party models that belong to you. Sections concerning ownership, restrictions, risk, warranty, liability, and general terms survive termination.
+
+14. COMPLIANCE
+You are responsible for complying with applicable laws, export controls, sanctions, privacy rules, intellectual-property rights, and model licenses. You may not use the Software to develop malware, violate privacy, facilitate unlawful harm, or evade lawful security controls.
+
+15. GENERAL TERMS
+If a provision is unenforceable, it will be limited or removed only to the minimum extent necessary, and the remainder will continue. Failure to enforce a provision is not a waiver. This Agreement is the complete agreement regarding the Software and does not override rights that applicable law says cannot be waived. The governing law and courts are those applicable to Licensor’s principal place of residence, subject to mandatory consumer-protection rules in your country.
+
+BY SELECTING “I ACCEPT,” YOU CONFIRM THAT YOU HAVE READ, UNDERSTOOD, AND AGREED TO THIS AGREEMENT AND THAT YOU ACCEPT THE COMPUTING, HARDWARE, DATA, AND AI-OUTPUT RISKS DESCRIBED ABOVE.

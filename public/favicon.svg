@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="g" x1="8" y1="6" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9b78ff"/>
+      <stop offset="0.52" stop-color="#6845e8"/>
+      <stop offset="1" stop-color="#302070"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="0" cy="0" r="1" gradientTransform="translate(19 14) rotate(46) scale(49)">
+      <stop stop-color="white" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="white" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#g)"/>
+  <rect width="64" height="64" rx="14" fill="url(#shine)"/>
+  <path d="M12.5 38.5C13.4 23.4 24.4 13.1 39.3 13.9C45.9 14.3 51.3 17.3 54.2 22.1" fill="none" stroke="white" stroke-width="3.4" stroke-linecap="round"/>
+  <path d="M51.2 30.2C53.3 41.8 44.8 51.8 32.5 52.5C24.4 53 17.1 49.7 12.8 44.4" fill="none" stroke="#c9ff67" stroke-width="3.4" stroke-linecap="round"/>
+  <circle cx="12.8" cy="38.5" r="2.7" fill="#c9ff67"/>
+  <circle cx="54.1" cy="22.1" r="2.25" fill="white"/>
+  <path d="M28.5 22.5V39.5H41" fill="none" stroke="white" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="41" cy="39.5" r="2.9" fill="#c9ff67"/>
+</svg>

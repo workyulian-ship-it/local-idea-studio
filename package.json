@@ -1,0 +1,123 @@
+{
+  "name": "lumen-studio",
+  "version": "0.1.0",
+  "description": "Lumen Studio - Local AI desktop app. Run LLMs locally with GPU acceleration.",
+  "main": "dist-electron/main.js",
+  "author": "Lumen Studio",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n VITE,ELECTRON -c cyan,magenta \"vite\" \"wait-on http://localhost:5173 && tsc -p electron/tsconfig.json && cross-env LUMEN_DEV=1 electron .\"",
+    "build:renderer": "vite build",
+    "build:electron": "tsc -p electron/tsconfig.json && node -e \"require('fs').copyFileSync('electron/preload.cjs','dist-electron/preload.cjs')\"",
+    "build:assets": "node scripts/build-brand-assets.mjs",
+    "build": "npm run build:assets && npm run build:renderer && npm run build:electron",
+    "start": "npm run build && electron .",
+    "package": "npm run build && electron-builder --win --x64",
+    "package:windows": "npm run build && electron-builder --win nsis --x64",
+    "package:linux": "npm run build && electron-builder --linux AppImage --x64",
+    "package:mac:x64": "npm run build && electron-builder --mac dmg --x64",
+    "package:mac:arm64": "npm run build && electron-builder --mac dmg --arm64",
+    "preview": "vite preview",
+    "lint": "tsc --noEmit && tsc -p electron/tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "highlight.js": "^11.10.0",
+    "lucide-react": "^0.460.0",
+    "node-llama-cpp": "^3.20.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-markdown": "^9.0.1",
+    "rehype-highlight": "^7.0.0",
+    "remark-gfm": "^4.0.0",
+    "tailwind-merge": "^2.5.4",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.0",
+    "cross-env": "^7.0.3",
+    "electron": "^33.0.2",
+    "electron-builder": "^25.1.8",
+    "postcss": "^8.4.49",
+    "rcedit": "^4.0.1",
+    "sharp": "^0.34.5",
+    "tailwindcss": "^3.4.14",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10",
+    "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "com.lumen.studio",
+    "productName": "Lumen Studio",
+    "copyright": "Lumen Studio",
+    "afterPack": "scripts/after-pack.cjs",
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "build/license.txt",
+        "to": "EULA.txt"
+      }
+    ],
+    "directories": {
+      "buildResources": "build",
+      "output": "release-artifacts"
+    },
+    "win": {
+      "icon": "build/icon.ico",
+      "signAndEditExecutable": false,
+      "target": [
+        "nsis"
+      ]
+    },
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ]
+    },
+    "linux": {
+      "category": "Development",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Lumen Studio",
+      "deleteAppDataOnUninstall": false,
+      "license": "build/license.txt",
+      "installerIcon": "build/installerIcon.ico",
+      "uninstallerIcon": "build/uninstallerIcon.ico",
+      "installerHeader": "build/installerHeader.bmp",
+      "installerSidebar": "build/installerSidebar.bmp",
+      "uninstallerSidebar": "build/uninstallerSidebar.bmp",
+      "runAfterFinish": true
+    }
+  }
+}

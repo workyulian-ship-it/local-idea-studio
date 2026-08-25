@@ -1,1 +1,1 @@
-737bfe7ad7e4512ef4abb31a91453e9ed4b69cc407c4fa20cc9ca21f9fe9683f  Local.Idea.Studio-0.1.8-win-x64.exe
+803ed3f88e05e8d82a25d9543420b53b283d06a80b6f2057251bd600d91c8419  Local.Idea.Studio-0.1.9-win-x64.exe

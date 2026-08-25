@@ -18,16 +18,48 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 function Slider({
-  label, value, min, max, step, onChange, format, hint,
+  label, value, min, max, step, onChange, format, hint, editable = false,
 }: {
   label: string; value: number; min: number; max: number; step: number;
-  onChange: (v: number) => void; format?: (v: number) => string; hint?: string;
+  onChange: (v: number) => void; format?: (v: number) => string; hint?: string; editable?: boolean;
 }) {
+  const [draft, setDraft] = useState(String(value));
+  useEffect(() => setDraft(String(value)), [value]);
+  const commitDraft = () => {
+    const parsed = Number(draft);
+    if (!Number.isFinite(parsed)) {
+      setDraft(String(value));
+      return;
+    }
+    const next = Math.min(max, Math.max(min, Math.round(parsed / step) * step));
+    setDraft(String(next));
+    onChange(next);
+  };
   return (
     <div>
       <div className="flex items-center justify-between text-xs mb-1.5">
         <span className="text-text-muted">{label}</span>
-        <span className="font-mono text-text">{format ? format(value) : value}</span>
+        {editable ? (
+          <input
+            type="number"
+            min={min}
+            max={max}
+            step={step}
+            value={draft}
+            aria-label={`${label} exact value`}
+            onChange={(event) => setDraft(event.target.value)}
+            onBlur={commitDraft}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                commitDraft();
+                event.currentTarget.blur();
+              }
+            }}
+            className="w-28 rounded border border-border bg-bg-elev px-2 py-1 text-right font-mono text-text"
+          />
+        ) : (
+          <span className="font-mono text-text">{format ? format(value) : value}</span>
+        )}
       </div>
       <input
         type="range" min={min} max={max} step={step} value={value}
@@ -62,6 +94,8 @@ export function SettingsPanel() {
   const contextMaximum = loaded?.trainContextSize ?? 131072;
   const outputContextLimit = Math.min(loaded?.contextSize ?? effective.contextSize, effective.contextSize);
   const maxTokensMaximum = Math.min(32768, Math.max(32, outputContextLimit - 256));
+  const requestedMaxTokens = profile.maxTokens ?? settings.maxTokens;
+  const configurableMaxTokens = 32768;
   const updateModelSetting = (patch: Partial<ModelProfile>) => {
     if (!loaded) return update(patch);
     return update({
@@ -70,6 +104,16 @@ export function SettingsPanel() {
         [loaded.modelPath]: { ...profile, ...patch },
       },
     });
+  };
+  const updateMaxOutputTokens = (value: number) => {
+    const maxTokens = Math.min(configurableMaxTokens, Math.max(32, Math.round(value)));
+    const requiredContext = Math.min(
+      contextMaximum,
+      Math.max(512, Math.ceil((maxTokens + 256) / 512) * 512),
+    );
+    const patch: Partial<ModelProfile> = { maxTokens };
+    if (requiredContext > effective.contextSize) patch.contextSize = requiredContext;
+    void updateModelSetting(patch);
   };
   const resetCurrentProfile = () => {
     if (!loaded) return;
@@ -226,9 +270,12 @@ export function SettingsPanel() {
             onChange={(v) => updateModelSetting({ topK: v })}
             hint="Sample from top K tokens"
           />
-          <Slider label="Max response tokens" value={effective.maxTokens} min={32} max={maxTokensMaximum} step={32}
-            onChange={(v) => updateModelSetting({ maxTokens: v })}
-            hint={`Capped by the active context; current safe maximum is ${maxTokensMaximum.toLocaleString()}`}
+          <Slider label="Requested max response tokens" value={requestedMaxTokens} min={32} max={configurableMaxTokens} step={1}
+            onChange={updateMaxOutputTokens}
+            editable
+            hint={loaded
+              ? `Saved per model. The currently loaded ${loaded.contextSize.toLocaleString()}-token context can generate up to ${maxTokensMaximum.toLocaleString()} tokens per reply. Larger values automatically raise the Context size cap below; reload the model to apply it, and hardware memory fitting may still select less.`
+              : "Enter the maximum response length you want. The active model context and available memory determine the runtime limit."}
           />
           <Slider label="Repeat penalty" value={effective.repeatPenalty} min={1} max={2} step={0.05}
             onChange={(v) => updateModelSetting({ repeatPenalty: v })}
@@ -321,6 +368,7 @@ export function SettingsPanel() {
           <Slider
             label="Context size cap" value={effective.contextSize} min={512} max={contextMaximum} step={512}
             onChange={(v) => updateModelSetting({ contextSize: v })}
+            editable
             hint={loaded
               ? `Never exceeds this model's trained limit (${contextMaximum.toLocaleString()}); memory fitting may select less.`
               : "Default cap only. Each loaded model gets its own profile and trained-context limit."}

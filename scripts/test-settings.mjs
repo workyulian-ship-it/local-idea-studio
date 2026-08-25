@@ -34,4 +34,4 @@ assert.equal(bounded.maxTokens, 1792);
 assert.equal(bounded.repeatPenalty, 2);
 assert.equal(getMaxOutputTokens(1024, 4096), 768);
 
-console.log("Settings engine test passed: sampling values are preserved and token output is model-context bounded.");
+console.log("Settings engine test passed: requested values persist while runtime output remains context bounded.");

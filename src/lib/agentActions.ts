@@ -57,6 +57,11 @@ export function parseAgentAction(text: string): {
     if (typeof raw.path !== "string" || !raw.path.trim()) {
       throw new Error("missing relative path");
     }
+    const proposedPath = raw.path.trim();
+    const displayPath = /^[a-zA-Z]:[\\/]/.test(proposedPath) || /^\\\\/.test(proposedPath)
+      ? proposedPath
+      : proposedPath.replace(/^[\\/]+/, "");
+    if (!displayPath) throw new Error("missing relative path");
     if (typeof raw.reason !== "string" || raw.reason.trim().length < 3) {
       throw new Error("missing permission reason");
     }
@@ -71,7 +76,7 @@ export function parseAgentAction(text: string): {
           ? raw.id.trim()
           : `agent-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         type: raw.type as AgentActionRequest["type"],
-        path: raw.path.trim(),
+        path: displayPath,
         reason: raw.reason.trim(),
         ...(raw.type === "create_directory" ? {} : { content: raw.content }),
       },

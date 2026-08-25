@@ -15,6 +15,15 @@ try {
   assert.equal(valid.relativePath, "hello.py");
   assert.ok(valid.target.startsWith(fs.realpathSync(workspace)));
 
+  const leadingSlash = validateAgentFileAction(workspace, {
+    type: "create_file",
+    path: "/hello.txt",
+    reason: "Create the requested greeting in the workspace root.",
+    content: "Hello world\n",
+  });
+  assert.equal(leadingSlash.relativePath, "hello.txt");
+  assert.equal(leadingSlash.action.path, "hello.txt");
+
   assert.throws(() => validateAgentFileAction(workspace, {
     type: "write_file",
     path: "../escape.txt",
@@ -26,6 +35,13 @@ try {
     type: "write_file",
     path: path.resolve(workspace, "absolute.txt"),
     reason: "Try an absolute path.",
+    content: "blocked",
+  }), /relative/i);
+
+  assert.throws(() => validateAgentFileAction(workspace, {
+    type: "write_file",
+    path: "C:\\Windows\\system.ini",
+    reason: "Try a drive-qualified path.",
     content: "blocked",
   }), /relative/i);
 

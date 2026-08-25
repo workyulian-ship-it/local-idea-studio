@@ -1,6 +1,6 @@
 {
   "name": "local-idea-studio",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Local Idea Studio - Private local AI desktop app with CPU, CUDA, and Vulkan acceleration.",
   "main": "dist-electron/main.js",
   "author": "Local Idea Studio",

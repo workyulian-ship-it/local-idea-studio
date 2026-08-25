@@ -32,15 +32,29 @@ function nearestExistingParent(target: string) {
   return current;
 }
 
+function normalizeModelProposedPath(value: string) {
+  const proposed = value.trim();
+  // Models commonly describe a workspace-root file as `/hello.txt`. Treat a
+  // leading slash as workspace-relative, but never reinterpret drive-qualified
+  // paths or UNC/device paths, which must remain blocked.
+  if (/^[a-zA-Z]:[\\/]/.test(proposed) || /^\\\\/.test(proposed)) {
+    throw new Error("Agent file paths must be relative to the selected workspace.");
+  }
+  const relative = proposed.replace(/^[\\/]+/, "");
+  if (!relative) throw new Error("Agent file paths must name a file or folder inside the workspace.");
+  return relative;
+}
+
 export function validateAgentFileAction(workspace: string, raw: unknown) {
   if (!workspace || !fs.existsSync(workspace)) throw new Error("Choose an Agent Mode workspace first.");
   const action = raw as Partial<AgentFileAction> | null;
   if (!action || typeof action !== "object" || !ACTIONS.has(action.type as AgentFileAction["type"])) {
     throw new Error("Unsupported agent action.");
   }
-  if (typeof action.path !== "string" || !action.path.trim() || path.isAbsolute(action.path)) {
+  if (typeof action.path !== "string" || !action.path.trim()) {
     throw new Error("Agent file paths must be relative to the selected workspace.");
   }
+  const normalizedPath = normalizeModelProposedPath(action.path);
   if (typeof action.reason !== "string" || action.reason.trim().length < 3) {
     throw new Error("The model must explain why this file operation is needed.");
   }
@@ -52,7 +66,7 @@ export function validateAgentFileAction(workspace: string, raw: unknown) {
   }
 
   const workspaceReal = fs.realpathSync(workspace);
-  const target = path.resolve(workspaceReal, action.path);
+  const target = path.resolve(workspaceReal, normalizedPath);
   if (!isInside(workspaceReal, target) || target === workspaceReal) {
     throw new Error("The requested path is outside the selected Agent Mode workspace.");
   }
@@ -69,7 +83,7 @@ export function validateAgentFileAction(workspace: string, raw: unknown) {
   }
 
   return {
-    action: action as AgentFileAction,
+    action: { ...action, path: normalizedPath } as AgentFileAction,
     workspaceReal,
     target,
     relativePath: path.relative(workspaceReal, target),

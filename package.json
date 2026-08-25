@@ -1,6 +1,6 @@
 {
   "name": "local-idea-studio",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Local Idea Studio - Private local AI desktop app with CPU, CUDA, and Vulkan acceleration.",
   "main": "dist-electron/main.js",
   "author": "Local Idea Studio",
@@ -25,7 +25,7 @@
     "test:backend-switch": "npm run build:electron && node scripts/test-backend-switch.mjs",
     "test:reasoning": "npm run build:electron && node scripts/test-reasoning-parser.mjs",
     "test:thinking": "npm run build:electron && node scripts/test-thinking-modes.mjs",
-    "test:agent": "npm run build:electron && node scripts/test-agent-files.mjs",
+    "test:agent": "npm run build:electron && node scripts/test-agent-files.mjs && node --experimental-strip-types scripts/test-agent-continuation.mjs",
     "test:agent-generation": "npm run build:electron && node scripts/test-agent-generation.mjs",
     "test:all": "npm run lint && npm run test:reasoning && npm run test:thinking && npm run test:agent"
   },

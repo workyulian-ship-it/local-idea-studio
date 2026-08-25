@@ -198,7 +198,7 @@ export function ChatView() {
               </div>
             ) : (
               <div className="max-w-3xl mx-auto py-2">
-                {current.messages.map((m) => (
+                {current.messages.filter((m) => !m.agentActionFeedback).map((m) => (
                   <Message key={m.id} message={m} />
                 ))}
                 {streaming && (

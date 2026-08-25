@@ -6,7 +6,7 @@ import { useChats } from "../store/chats";
 import { useUi } from "../store/ui";
 import { cn } from "../lib/utils";
 import { getEffectiveModelSettings } from "../lib/modelSettings";
-import { parseAgentAction } from "../lib/agentActions";
+import { isSameAgentAction, parseAgentAction } from "../lib/agentActions";
 
 interface Props {
   disabled?: boolean;
@@ -74,10 +74,19 @@ export function ChatInput({ disabled }: Props) {
     if (!chatState.current) return;
     const currentSettings = useSettings.getState().settings;
     const parsedAction = currentSettings?.agentMode ? parseAgentAction(text) : { visibleText: text };
-    const action = parsedAction.action;
+    let action = parsedAction.action;
+    const isAgentContinuation = chatState.current.messages.at(-1)?.agentActionFeedback === true;
+    const repeatedTerminalAction = Boolean(isAgentContinuation && action && chatState.current.messages.some((message) =>
+      ["completed", "declined", "failed"].includes(message.agentActionStatus ?? "")
+      && message.agentAction
+      && isSameAgentAction(message.agentAction, action!),
+    ));
+    if (repeatedTerminalAction) action = undefined;
     const cleanText = parsedAction.visibleText;
     const visibleText = cleanText.trim()
       ? cleanText
+      : repeatedTerminalAction
+        ? "The previous file operation already reached a final result. No duplicate operation was run."
       : action
         ? `Agent Mode proposes: **${action.reason}**`
       : reasoning?.trim()

@@ -31,24 +31,25 @@ const settings = {
   agentWorkspace: null,
 };
 
-let resolveResult;
-let rejectResult;
-const result = new Promise((resolve, reject) => {
-  resolveResult = resolve;
-  rejectResult = reject;
-});
+const pending = new Map();
 onLlamaEvent((event) => {
-  if (!event || event.conversationId !== "agent-generation") return;
-  if (event.type === "done") resolveResult(event.text ?? "");
-  if (event.type === "error") rejectResult(new Error(event.error));
+  const waiter = event?.conversationId ? pending.get(event.conversationId) : null;
+  if (!waiter) return;
+  if (event.type === "done") {
+    pending.delete(event.conversationId);
+    waiter.resolve(event.text ?? "");
+  }
+  if (event.type === "error") {
+    pending.delete(event.conversationId);
+    waiter.reject(new Error(event.error));
+  }
 });
 
-try {
-  const info = await loadModel(modelPath, { settings });
-  console.log(`Loaded Agent Mode test on ${info.backend}.`);
+async function runChat(conversationId, messages) {
+  const result = new Promise((resolve, reject) => pending.set(conversationId, { resolve, reject }));
   await streamChat({
-    conversationId: "agent-generation",
-    messages: [{ role: "user", content: "Create hello.py that prints Hello World five times." }],
+    conversationId,
+    messages,
     opts: {
       temperature: 0,
       topP: 1,
@@ -60,7 +61,14 @@ try {
       agentMode: true,
     },
   }, () => null);
-  const answer = await result;
+  return result;
+}
+
+try {
+  const info = await loadModel(modelPath, { settings });
+  console.log(`Loaded Agent Mode test on ${info.backend}.`);
+  const originalPrompt = "Create hello.py that prints Hello World five times.";
+  const answer = await runChat("agent-generation", [{ role: "user", content: originalPrompt }]);
   const match = answer.match(/<agent_action>\s*([\s\S]*?\})\s*(?:<\/agent_action>)?\s*$/i);
   assert.ok(match, `Model did not propose a permission-gated action:\n${answer}`);
   const action = JSON.parse(match[1]);
@@ -68,7 +76,17 @@ try {
   assert.equal(action.path, "hello.py");
   assert.match(action.reason, /hello|python|script/i);
   assert.match(action.content, /Hello World/);
-  console.log("Real GGUF Agent Mode proposal test passed. No file operation was executed.");
+  const continuation = await runChat("agent-continuation", [
+    { role: "user", content: originalPrompt },
+    { role: "assistant", content: `Agent Mode proposes: ${action.reason}` },
+    {
+      role: "user",
+      content: `[LOCAL IDEA AGENT RESULT]\nOutcome: SUCCESS\nOperation: Create file\nWorkspace-relative path: hello.py\nResult: Create file completed: hello.py\nThe application already completed this exact operation after user approval. Continue the original request, briefly confirm the completed result, and do not propose or repeat this same action.`,
+    },
+  ]);
+  assert.doesNotMatch(continuation, /<agent_action>/i, `Model repeated the completed action:\n${continuation}`);
+  assert.match(continuation, /created|complete|done|hello\.py/i, `Model did not finish after the action result:\n${continuation}`);
+  console.log("Real GGUF Agent Mode proposal + post-approval continuation test passed. No file operation was executed.");
 } finally {
   await shutdownLlama();
 }

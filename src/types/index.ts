@@ -129,6 +129,8 @@ export interface ChatMessage {
   agentAction?: AgentActionRequest;
   agentActionStatus?: "pending" | "running" | "completed" | "declined" | "failed";
   agentActionResult?: string;
+  /** Persisted model context for an Agent Mode result; hidden from the visible transcript. */
+  agentActionFeedback?: boolean;
 }
 
 export interface Chat {

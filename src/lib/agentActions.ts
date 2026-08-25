@@ -1,4 +1,4 @@
-import type { AgentActionRequest } from "../types";
+import type { AgentActionRequest, AgentActionResult } from "../types";
 
 const ACTION_TYPES = new Set<AgentActionRequest["type"]>([
   "create_file",
@@ -94,4 +94,36 @@ export function agentOperationLabel(type: AgentActionRequest["type"]) {
   if (type === "write_file") return "Create or replace file";
   if (type === "append_file") return "Append to file";
   return "Create folder";
+}
+
+function normalizedActionPath(value: string) {
+  return value.trim().replace(/^[\\/]+/, "").replace(/\\/g, "/").toLowerCase();
+}
+
+export function isSameAgentAction(left: AgentActionRequest, right: AgentActionRequest) {
+  return left.type === right.type
+    && normalizedActionPath(left.path) === normalizedActionPath(right.path)
+    && (left.type === "create_directory" || (left.content ?? "") === (right.content ?? ""));
+}
+
+export function buildAgentActionFeedback(
+  action: AgentActionRequest,
+  result: AgentActionResult,
+) {
+  const outcome = result.ok
+    ? "SUCCESS"
+    : !result.approved && result.message.toLowerCase().includes("declined")
+      ? "DECLINED"
+      : "FAILED";
+  return [
+    "[LOCAL IDEA AGENT RESULT]",
+    `Outcome: ${outcome}`,
+    `Operation: ${agentOperationLabel(action.type)}`,
+    `Workspace-relative path: ${action.path.replace(/^[\\/]+/, "")}`,
+    `Result: ${result.message}`,
+    result.backupPath ? "A backup was created by the application." : "",
+    result.ok
+      ? "The application already completed this exact operation after user approval. Continue the original request, briefly confirm the completed result, and do not propose or repeat this same action. You may propose a different next action only if the original request truly requires another operation."
+      : "The application did not complete this operation. Explain the result briefly and do not retry or repeat the action unless the user explicitly asks you to try again.",
+  ].filter(Boolean).join("\n");
 }

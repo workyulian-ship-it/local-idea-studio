@@ -9,6 +9,7 @@ import { cn } from "../lib/utils";
 import { useChats } from "../store/chats";
 import { useUi } from "../store/ui";
 import { agentOperationLabel } from "../lib/agentActions";
+import { continueAfterAgentAction } from "../lib/agentContinuation";
 
 export function Message({ message, isStreaming }: { message: ChatMessage; isStreaming?: boolean }) {
   const isUser = message.role === "user";
@@ -112,6 +113,7 @@ function AgentActionCard({ message }: { message: ChatMessage }) {
   const pushToast = useUi((state) => state.pushToast);
 
   const allow = async () => {
+    const conversationId = useChats.getState().current?.id;
     await updateMessage(message.id, { agentActionStatus: "running", agentActionResult: undefined });
     try {
       // The main process performs validation again and shows the real native
@@ -131,18 +133,33 @@ function AgentActionCard({ message }: { message: ChatMessage }) {
           .join("\n"),
       });
       pushToast({ kind: result.ok ? "success" : "info", text: result.message });
+      if (conversationId) {
+        await continueAfterAgentAction(conversationId, action, result);
+      }
     } catch (error: any) {
       const result = error?.message ?? String(error);
       await updateMessage(message.id, { agentActionStatus: "failed", agentActionResult: result });
       pushToast({ kind: "error", text: result });
+      if (conversationId) {
+        await continueAfterAgentAction(conversationId, action, {
+          ok: false,
+          approved: false,
+          message: result,
+        });
+      }
     }
   };
 
   const decline = async () => {
+    const conversationId = useChats.getState().current?.id;
+    const result = { ok: false, approved: false, message: "Permission declined. No files were changed." };
     await updateMessage(message.id, {
       agentActionStatus: "declined",
-      agentActionResult: "Permission declined. No files were changed.",
+      agentActionResult: result.message,
     });
+    if (conversationId) {
+      await continueAfterAgentAction(conversationId, action, result);
+    }
   };
 
   return (

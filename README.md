@@ -4,6 +4,8 @@ Local Idea Studio is a Windows desktop application for discovering, downloading,
 
 Official website: https://lumen-studio-local-ai.lush-flute-8657.chatgpt.site/
 
+Official Discord community: https://discord.gg/cFaES6muP
+
 ## v0.1.6 early access
 
 - Windows 10/11 x64
@@ -29,6 +31,12 @@ The v0.1.6 Windows installer is currently **unsigned**. Windows may display a Mi
 Prompts and model inference are processed locally by the application. Chats, settings, and downloaded models are stored on the user's computer. Network access occurs when the user searches or downloads models from Hugging Face or opens an external link. The application does not require a Local Idea Studio account and does not include intentional prompt telemetry.
 
 An optional Hugging Face token can be entered in Settings for repositories that require authentication. It is stored in the local settings file and is only sent to Hugging Face requests.
+
+## Community and support
+
+Join the official Discord community for setup help, bug reports, GGUF model discussion, CPU/GPU benchmarks, release news, and feedback:
+
+https://discord.gg/cFaES6muP
 
 ## Build from source
 

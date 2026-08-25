@@ -266,13 +266,16 @@ export function SettingsPanel() {
             </div>
           </div>
           <div>
-            <div className="text-xs text-text-muted mb-1.5">Threads (0 = auto)</div>
+            <div className="text-xs text-text-muted mb-1.5">CPU threads (0 = all logical processors)</div>
             <input
               type="number" min={0} max={64}
               value={settings.threads}
               onChange={(e) => update({ threads: parseInt(e.target.value || "0") })}
               className="input"
             />
+            <div className="text-[10px] text-text-dim mt-1">
+              Auto uses every logical CPU thread detected by Windows. Manual values are intended for thermal or responsiveness limits.
+            </div>
           </div>
         </Section>
 
@@ -323,6 +326,24 @@ export function SettingsPanel() {
           <div className="grid grid-cols-2 gap-3 text-xs">
             <Info label="Backend" value={tps?.backend ?? "—"} />
             <Info label="GPU" value={tps?.gpu ?? "none"} />
+            <Info
+              label="CPU threads"
+              value={loaded ? `${loaded.cpuThreads}/${loaded.logicalCpuThreads} logical` : "auto"}
+            />
+            <Info
+              label="GPU offload"
+              value={loaded ? `${loaded.gpuLayers}/${loaded.totalLayers} layers (${loaded.gpuOffloadPercent}%)` : "—"}
+            />
+            <Info label="Batch size" value={loaded ? String(loaded.batchSize) : "—"} />
+            <Info label="Flash attention" value={loaded ? (loaded.flashAttention ? "active" : "unavailable/off") : "—"} />
+            <Info
+              label="Reasoning"
+              value={!loaded
+                ? "—"
+                : loaded.reasoningSupported
+                  ? `visible reasoning · ${loaded.chatWrapper}`
+                  : "standard model · hidden unless emitted"}
+            />
             <Info label="App version" value={paths?.appVersion ?? "—"} />
             <Info label="Platform" value={paths?.platform ?? "—"} />
           </div>

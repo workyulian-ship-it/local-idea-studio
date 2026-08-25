@@ -104,6 +104,16 @@ export interface LoadedModelInfo {
   backend: string;
   gpu: string | null;
   vram: number | null;
+  cpuThreads: number;
+  cpuMathCores: number;
+  logicalCpuThreads: number;
+  batchSize: number;
+  flashAttention: boolean;
+  totalLayers: number;
+  gpuOffloadPercent: number;
+  reasoningSupported: boolean;
+  reasoningSource: "chat-template" | "runtime-output" | "none";
+  chatWrapper: string;
   loadedAt: number;
 }
 
@@ -111,6 +121,8 @@ export interface ChatMessage {
   id: string;
   role: "system" | "user" | "assistant";
   content: string;
+  reasoning?: string;
+  stats?: { tps: number; tokens: number; elapsed: number };
   createdAt: number;
 }
 

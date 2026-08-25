@@ -8,7 +8,7 @@ import { ChatInput } from "./ChatInput";
 import { cn, timeAgo, formatBytes } from "../lib/utils";
 
 export function ChatView() {
-  const { chats, current, currentId, create, select, remove, streaming, streamText } = useChats();
+  const { chats, current, currentId, create, select, remove, streaming, streamText, streamReasoning } = useChats();
   const { loaded, local } = useModels();
   const { setView, pushToast } = useUi();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -20,7 +20,7 @@ export function ChatView() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [current?.messages?.length, streamText]);
+  }, [current?.messages?.length, streamText, streamReasoning]);
 
   const startNew = async () => {
     await create("New chat");
@@ -201,12 +201,13 @@ export function ChatView() {
                 {current.messages.map((m) => (
                   <Message key={m.id} message={m} />
                 ))}
-                {streaming && streamText && (
+                {streaming && (
                   <Message
                     message={{
                       id: "streaming",
                       role: "assistant",
                       content: streamText,
+                      reasoning: streamReasoning,
                       createdAt: Date.now(),
                     }}
                     isStreaming

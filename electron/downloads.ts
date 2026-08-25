@@ -104,7 +104,7 @@ class DownloadManager extends EventEmitter {
 
     return new Promise<void>((resolve, reject) => {
       const headers: Record<string, string> = {
-        "User-Agent": "LocalIdeaStudio/0.1.5",
+        "User-Agent": "LocalIdeaStudio/0.1.6",
       };
       if (hfToken?.trim()) headers.Authorization = `Bearer ${hfToken.trim()}`;
 

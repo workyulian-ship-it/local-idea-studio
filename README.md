@@ -4,12 +4,15 @@ Local Idea Studio is a Windows desktop application for discovering, downloading,
 
 Official website: https://lumen-studio-local-ai.lush-flute-8657.chatgpt.site/
 
-## v0.1.5 early access
+## v0.1.6 early access
 
 - Windows 10/11 x64
 - Local GGUF inference through `node-llama-cpp`
 - CPU, NVIDIA CUDA, and cross-vendor Vulkan GPU runtime options
 - Automatic backend selection prefers CUDA on supported NVIDIA hardware, with explicit CUDA, Vulkan, and CPU choices in Settings
+- Maximum-performance Auto mode uses every logical CPU thread and up to a 2048-token accelerated prompt batch
+- Full GPU layer offload when the model and available VRAM/RAM permit it, with the actual layer count shown in Runtime info
+- Per-model reasoning detection: compatible GGUF chat templates stream their real reasoning text in a collapsible panel; standard models show only their answer
 - Hugging Face GGUF search and downloads
 - Models stored by default in the current user's `Documents/Local Idea Studio/models` folder
 - Existing Lumen Studio installations retain their selected storage path so downloaded models remain visible after the rename
@@ -19,7 +22,7 @@ Official website: https://lumen-studio-local-ai.lush-flute-8657.chatgpt.site/
 
 New installations never require a `D:` drive. Existing v0.1.0 users who already have Lumen data on `D:\LLM AI` keep that location so an update does not hide their settings or downloaded models.
 
-The v0.1.5 Windows installer is currently **unsigned**. Windows may display a Microsoft Defender SmartScreen warning. Verify the installer checksum against [`SHA256SUMS.txt`](./SHA256SUMS.txt) before running it.
+The v0.1.6 Windows installer is currently **unsigned**. Windows may display a Microsoft Defender SmartScreen warning. Verify the installer checksum against [`SHA256SUMS.txt`](./SHA256SUMS.txt) before running it.
 
 ## Privacy and network behavior
 

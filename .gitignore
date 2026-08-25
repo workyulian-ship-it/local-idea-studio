@@ -12,3 +12,6 @@ settings.json
 chats/
 models/
 cache/
+__pycache__/
+*.py[cod]
+.pytest_cache/

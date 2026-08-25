@@ -205,7 +205,9 @@ export function registerIpcHandlers(ctx: IpcContext) {
   onLlamaEvent((evt: any) => {
     const w = win();
     if (!w) return;
-    if (evt.type === "token") w.webContents.send("llm:token", evt);
+    if (evt.type === "token" || evt.type === "reasoning" || evt.type === "reasoning-capability") {
+      w.webContents.send("llm:token", evt);
+    }
     else if (evt.type === "stats") w.webContents.send("llm:stats", evt);
     else if (evt.type === "error") w.webContents.send("llm:token", evt);
     else if (evt.type === "done") w.webContents.send("llm:token", evt);

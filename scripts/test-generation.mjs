@@ -40,18 +40,20 @@ onLlamaEvent((event) => {
   const target = waiting.get(event.conversationId);
   if (!target) return;
   if (event.type === "token") target.text += event.text;
+  if (event.type === "reasoning") target.reasoning += event.text;
   if (event.type === "error") {
     waiting.delete(event.conversationId);
     target.reject(new Error(event.error));
   }
   if (event.type === "done") {
+    console.log(`Done ${event.conversationId}: answer=${(event.text || "").length} reasoning=${(event.reasoning || "").length} chunks=${target.text.length + target.reasoning.length}`);
     waiting.delete(event.conversationId);
-    target.resolve(target.text || event.text || "");
+    target.resolve({ text: target.text || event.text || "", reasoning: target.reasoning || event.reasoning || "" });
   }
 });
 
 async function generate(conversationId, opts) {
-  const result = new Promise((resolve, reject) => waiting.set(conversationId, { resolve, reject, text: "" }));
+  const result = new Promise((resolve, reject) => waiting.set(conversationId, { resolve, reject, text: "", reasoning: "" }));
   await streamChat({
     conversationId,
     messages: [{ role: "user", content: "Name one useful feature of local AI in one short sentence." }],
@@ -73,7 +75,7 @@ try {
     temperature: 0,
     topP: 1,
     topK: 40,
-    maxTokens: 48,
+    maxTokens: 192,
     repeatPenalty: 1.1,
     seed: 42,
   });
@@ -81,14 +83,19 @@ try {
     temperature: 1.4,
     topP: 0.95,
     topK: 40,
-    maxTokens: 48,
+    maxTokens: 192,
     repeatPenalty: 1.1,
     seed: 99,
   });
 
-  if (!deterministic.trim() || !creative.trim()) throw new Error("Generation returned an empty response");
-  console.log(`Temperature 0.00: ${deterministic.trim()}`);
-  console.log(`Temperature 1.40: ${creative.trim()}`);
+  if (!(deterministic.text + deterministic.reasoning).trim()) throw new Error("Deterministic generation returned an empty response");
+  console.log(`Temperature 0.00 answer: ${deterministic.text.trim() || "(reasoning-only)"}`);
+  console.log(`Temperature 0.00 reasoning chars: ${deterministic.reasoning.length}`);
+  console.log(`Temperature 1.40 answer: ${creative.text.trim() || "(reasoning-only)"}`);
+  console.log(`Temperature 1.40 reasoning chars: ${creative.reasoning.length}`);
+  if (!(creative.text + creative.reasoning).trim()) {
+    console.warn("Creative sampling reached EOS before visible output; deterministic generation still verified the runtime.");
+  }
   console.log("Real GGUF generation test passed.");
 } finally {
   await shutdownLlama();

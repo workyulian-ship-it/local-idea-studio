@@ -27,8 +27,27 @@ export function ChatInput({ disabled }: Props) {
       if (e.conversationId && e.conversationId !== chatState.current?.id) return;
       if (e.type === "token") {
         chatState.setStreamText((currentText) => currentText + e.text);
+      } else if (e.type === "reasoning") {
+        chatState.setStreamReasoning((currentText) => currentText + e.text);
+        const modelState = useModels.getState();
+        if (modelState.loaded && (!modelState.loaded.reasoningSupported || modelState.loaded.reasoningSource === "none")) {
+          modelState.setLoaded({
+            ...modelState.loaded,
+            reasoningSupported: true,
+            reasoningSource: e.source === "chat-template" ? "chat-template" : "runtime-output",
+          });
+        }
+      } else if (e.type === "reasoning-capability") {
+        const modelState = useModels.getState();
+        if (modelState.loaded) {
+          modelState.setLoaded({
+            ...modelState.loaded,
+            reasoningSupported: Boolean(e.supported),
+            reasoningSource: e.source ?? "runtime-output",
+          });
+        }
       } else if (e.type === "done") {
-        void finalize(e.text || chatState.streamText, e.aborted);
+        void finalize(e.text || chatState.streamText, e.reasoning || chatState.streamReasoning, e.aborted);
       } else if (e.type === "error") {
         pushToast({ kind: "error", text: e.error ?? "Inference error" });
         chatState.setStreaming(false);
@@ -49,13 +68,20 @@ export function ChatInput({ disabled }: Props) {
   }, [pushToast]);
 
   // Finalize is called when stream done
-  const finalize = async (text: string, aborted?: boolean) => {
+  const finalize = async (text: string, reasoning?: string, aborted?: boolean) => {
     const chatState = useChats.getState();
     if (!chatState.current) return;
+    const visibleText = text.trim()
+      ? text
+      : reasoning?.trim()
+        ? "_(The model used its response budget while reasoning and stopped before producing a final answer. Increase Max response tokens and try again.)_"
+        : "_(The model returned an empty response.)_";
     const assistantMsg = {
       id: Math.random().toString(36).slice(2),
       role: "assistant" as const,
-      content: aborted ? text + "\n\n_(stopped)_" : text,
+      content: aborted ? visibleText + "\n\n_(stopped)_" : visibleText,
+      reasoning: reasoning?.trim() || undefined,
+      stats: chatState.streamStats ?? undefined,
       createdAt: Date.now(),
     };
     await chatState.append(assistantMsg);

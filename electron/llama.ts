@@ -1,6 +1,7 @@
 import { EventEmitter } from "events";
 import path from "path";
 import fs from "fs";
+import os from "os";
 import {
   getLlama,
   LlamaLogLevel,
@@ -9,10 +10,23 @@ import {
   LlamaContext,
   type LlamaGpuType,
   type ChatHistoryItem,
+  type LlamaChatResponseChunk,
   type LlamaChatSessionRepeatPenalty,
 } from "node-llama-cpp";
 import type { BrowserWindow } from "electron";
 import type { AppSettings } from "./settings.js";
+import {
+  ReasoningStreamParser,
+  chatWrapperSupportsReasoning,
+  splitReasoningFromResponse,
+} from "./reasoning.js";
+
+type ReasoningSource = "chat-template" | "runtime-output" | "none";
+type GpuLayerSelection = "auto" | "max" | number | {
+  min?: number;
+  max?: number;
+  fitContext?: { contextSize?: number };
+};
 
 interface LoadedState {
   modelId: string;
@@ -24,6 +38,16 @@ interface LoadedState {
   backend: string;
   gpu: string | null;
   vram: number | null;
+  cpuThreads: number;
+  cpuMathCores: number;
+  logicalCpuThreads: number;
+  batchSize: number;
+  flashAttention: boolean;
+  totalLayers: number;
+  gpuOffloadPercent: number;
+  reasoningSupported: boolean;
+  reasoningSource: ReasoningSource;
+  chatWrapper: string;
   loadedAt: number;
 }
 
@@ -70,6 +94,9 @@ async function ensureLlamaBackend(preference: AppSettings["gpuBackend"]) {
     llamaInstance = await getLlama({
       gpu: preference === "cpu" ? false : preference,
       logLevel: LlamaLogLevel.warn,
+      // 0 removes the library-level cap. Context thread selection still uses
+      // llama.cpp's hardware-aware maximum when Settings is left on Auto.
+      maxThreads: 0,
     });
     const gpu = llamaInstance.gpu as LlamaGpuType | false;
     runtimePreference = preference;
@@ -131,43 +158,104 @@ export async function loadModel(modelId: string, opts: { settings: AppSettings; 
   const gpu = (llamaInstance.gpu as LlamaGpuType | false) ?? false;
   const profile = settings.modelProfiles?.[modelPath] ?? {};
   const useGpu = settings.gpuBackend !== "cpu" && !!gpu;
-  // -1 in user settings means "all layers" → use "max" to force full GPU offload
+  // -1 means "as many layers as fit". Supplying the intended context lets
+  // node-llama-cpp reserve KV-cache memory instead of filling VRAM with model
+  // weights and then failing while the context is created.
   const requestedLayers = (rest as any).gpuLayers ?? settings.gpuLayers ?? -1;
-  const gpuLayers: "auto" | "max" | number =
-    requestedLayers === -1 ? "max" : requestedLayers;
   const requestedContextSize = (rest as any).contextSize ?? profile.contextSize ?? settings.contextSize ?? 4096;
-  const batchSize = (rest as any).batchSize ?? 1024;
+  const normalizedContextSize = Math.max(512, Math.round(requestedContextSize));
+  const normalizedLayerLimit = Math.max(-1, Math.round(requestedLayers));
+  const primaryGpuLayers: GpuLayerSelection = !useGpu
+    ? 0
+    : normalizedLayerLimit === 0
+      ? 0
+      : {
+          ...(normalizedLayerLimit > 0 ? { max: normalizedLayerLimit } : {}),
+          fitContext: { contextSize: normalizedContextSize },
+        };
+  // Use the largest practical prompt batch on accelerated backends. This
+  // improves prompt ingestion throughput; token generation itself remains
+  // sequential and may still be memory-bandwidth bound on smaller models.
+  const batchSize = Math.max(32, Math.min(2048, Math.round((rest as any).batchSize ?? (useGpu ? 2048 : 1024))));
   const configuredThreads = (rest as any).threads ?? settings.threads ?? 0;
-  const threads = configuredThreads;
+  const logicalCpuThreads = os.availableParallelism();
+  // "Auto / maximum" means every logical processor, including when a GPU is
+  // active. llama.cpp will still schedule only the CPU-side work required by
+  // the selected backend, but it is no longer capped at physical math cores.
+  const autoThreads = logicalCpuThreads;
+  const threads = configuredThreads === 0
+    ? autoThreads
+    : Math.max(1, Math.min(logicalCpuThreads, Math.round(configuredThreads)));
 
   // Performance flags — opt-out via settings, default ALL ON
   const useFlashAttention = settings.flashAttention ?? true;
   const useMlock = settings.mlock ?? true;
   const useMmap = settings.mmap ?? true; // (F16 KV is the library default; no opt needed)
 
-  const model = await llamaInstance.loadModel({
-    modelPath,
-    gpuLayers: useGpu ? gpuLayers : 0,
-    defaultContextFlashAttention: useFlashAttention ? "auto" : false,
-    useMmap,
-    useMlock,
-    onLoadProgress: (p: number) => {
-      const win = getCurrentWindow();
-      win?.webContents.send("llm:stats", { type: "load-progress", progress: p });
-    },
-  });
+  const loadResources = async (
+    gpuLayerSelection: GpuLayerSelection,
+    contextCap: number,
+    lockMemory: boolean,
+    mmapMode: "auto" | boolean,
+  ) => {
+    let model: LlamaModel | null = null;
+    try {
+      model = await llamaInstance!.loadModel({
+        modelPath,
+        gpuLayers: gpuLayerSelection,
+        defaultContextFlashAttention: useFlashAttention ? "auto" : false,
+        useMmap: mmapMode,
+        useMlock: lockMemory,
+        onLoadProgress: (p: number) => {
+          const win = getCurrentWindow();
+          win?.webContents.send("llm:stats", { type: "load-progress", progress: p });
+        },
+      });
 
+      const trainContextSize = Math.max(512, model.trainContextSize || 4096);
+      const contextSizeLimit = Math.min(trainContextSize, contextCap);
+      const ctx = await model.createContext({
+        contextSize: { min: Math.min(512, contextSizeLimit), max: contextSizeLimit },
+        batchSize,
+        threads,
+        batching: { itemPrioritizationStrategy: "firstInFirstOut" },
+      });
+      return { model, ctx, trainContextSize };
+    } catch (error) {
+      if (model) {
+        try {
+          await model.dispose();
+        } catch {
+          // Keep the original load/context error.
+        }
+      }
+      throw error;
+    }
+  };
+
+  let resources: Awaited<ReturnType<typeof loadResources>>;
+  try {
+    resources = await loadResources(primaryGpuLayers, normalizedContextSize, useMlock, useMmap);
+  } catch (firstError) {
+    // Old installations may contain an over-large layer count/context or mlock
+    // enabled on a shared-memory GPU. Retry once with memory-safe automatic
+    // fitting so both CPU and GPU modes can still load and generate.
+    const safeContextSize = Math.min(normalizedContextSize, 4096);
+    const safeGpuLayers: GpuLayerSelection = useGpu
+      ? { fitContext: { contextSize: safeContextSize } }
+      : 0;
+    console.warn("[llama] requested model configuration failed; retrying safely", firstError);
+    resources = await loadResources(safeGpuLayers, safeContextSize, false, "auto");
+  }
+
+  const { model, ctx, trainContextSize } = resources;
   loadedModel = model;
-  const trainContextSize = Math.max(512, model.trainContextSize || 4096);
-  const contextSizeLimit = Math.min(trainContextSize, Math.max(512, Math.round(requestedContextSize)));
-  const ctx = await model.createContext({
-    contextSize: { min: Math.min(512, contextSizeLimit), max: contextSizeLimit },
-    batchSize,
-    threads,
-  });
   context = ctx;
   const session = new LlamaChatSession({ contextSequence: ctx.getSequence() });
   activeSession = session;
+  const reasoningSupported = chatWrapperSupportsReasoning(session.chatWrapper);
+  const totalLayers = model.fileInsights.totalLayers;
+  const actualGpuLayers = useGpu ? model.gpuLayers : 0;
 
   loadedInfo = {
     modelId: path.basename(modelPath),
@@ -175,16 +263,22 @@ export async function loadModel(modelId: string, opts: { settings: AppSettings; 
     contextSize: ctx.contextSize,
     trainContextSize,
     maxOutputTokens: getMaxOutputTokens(ctx.contextSize, profile.maxTokens ?? settings.maxTokens),
-    gpuLayers: useGpu ? gpuLayers : 0,
+    gpuLayers: actualGpuLayers,
     backend: useGpu && gpu ? String(gpu) : "cpu",
     gpu: useGpu && gpu ? String(gpu) : null,
     vram: null,
+    cpuThreads: ctx.idealThreads,
+    cpuMathCores: llamaInstance.cpuMathCores,
+    logicalCpuThreads,
+    batchSize: ctx.batchSize,
+    flashAttention: ctx.flashAttention !== false,
+    totalLayers,
+    gpuOffloadPercent: totalLayers > 0 ? Math.round((actualGpuLayers / totalLayers) * 100) : 0,
+    reasoningSupported,
+    reasoningSource: reasoningSupported ? "chat-template" : "none",
+    chatWrapper: session.chatWrapper.wrapperName,
     loadedAt: Date.now(),
   };
-  // If we requested "max", reflect that as the number of layers actually on GPU
-  if (loadedModel) {
-    loadedInfo.gpuLayers = loadedModel.gpuLayers;
-  }
 
   return loadedInfo;
 }
@@ -270,9 +364,78 @@ export async function streamChat(payload: ChatPayload, getWin: () => BrowserWind
   const userPrompt = messages[lastUserIdx].content;
   const start = Date.now();
   let tokens = 0;
+  let answer = "";
+  let reasoning = "";
+  let lastStatsAt = 0;
+  let generationStartedAt = 0;
+  const reasoningParser = new ReasoningStreamParser();
 
   const send = (data: unknown) => {
     emitter.emit("event", data);
+  };
+
+  const markReasoningDetected = (source: Exclude<ReasoningSource, "none">) => {
+    if (!loadedInfo) return;
+    if (!loadedInfo.reasoningSupported || loadedInfo.reasoningSource === "none") {
+      loadedInfo.reasoningSupported = true;
+      loadedInfo.reasoningSource = source;
+      send({
+        type: "reasoning-capability",
+        supported: true,
+        source,
+        conversationId: payload.conversationId,
+      });
+    }
+  };
+
+  const emitParsedText = (text: string) => {
+    if (!text) return;
+    const parsed = reasoningParser.push(text);
+    if (reasoningParser.sawReasoning) markReasoningDetected("runtime-output");
+    if (parsed.reasoning) {
+      reasoning += parsed.reasoning;
+      send({
+        type: "reasoning",
+        text: parsed.reasoning,
+        source: "runtime-output",
+        conversationId: payload.conversationId,
+      });
+    }
+    if (parsed.answer) {
+      answer += parsed.answer;
+      send({ type: "token", text: parsed.answer, conversationId: payload.conversationId });
+    }
+  };
+
+  const onResponseChunk = (chunk: LlamaChatResponseChunk) => {
+    if (abortFlag.aborted) return;
+    const now = Date.now();
+    if (!generationStartedAt) generationStartedAt = now;
+    tokens += chunk.tokens.length;
+
+    if (chunk.type === "segment" && chunk.segmentType === "thought") {
+      markReasoningDetected("chat-template");
+      if (chunk.text) {
+        reasoning += chunk.text;
+        send({
+          type: "reasoning",
+          text: chunk.text,
+          source: "chat-template",
+          conversationId: payload.conversationId,
+        });
+      }
+    } else {
+      // Main response and non-thought segments remain visible as the answer.
+      // The fallback parser handles GGUF templates that emit literal tags but
+      // do not advertise structured thought segments.
+      emitParsedText(chunk.text);
+    }
+
+    if (now - lastStatsAt >= 250) {
+      const elapsed = Math.max(0.001, (now - generationStartedAt) / 1000);
+      send({ type: "stats", tokens, elapsed, tps: tokens / elapsed, conversationId: payload.conversationId });
+      lastStatsAt = now;
+    }
   };
 
   const repeatPenalty: false | LlamaChatSessionRepeatPenalty =
@@ -295,20 +458,40 @@ export async function streamChat(payload: ChatPayload, getWin: () => BrowserWind
       seed: generation.seed,
       signal: abortWatcher.signal,
       stopOnAbortSignal: true,
-      onTextChunk: (chunk: string) => {
-        if (abortFlag.aborted) return;
-        tokens += Math.max(1, Math.round(chunk.length / 4));
-        send({ type: "token", text: chunk, conversationId: payload.conversationId });
-      },
+      onResponseChunk,
     });
     const generationDone = promptPromise.then(() => undefined, () => undefined);
     activeGeneration = generationDone;
     const reply = await promptPromise;
 
-    const elapsed = (Date.now() - start) / 1000;
+    const remaining = reasoningParser.flush();
+    if (reasoningParser.sawReasoning) markReasoningDetected("runtime-output");
+    if (remaining.reasoning) {
+      reasoning += remaining.reasoning;
+      send({ type: "reasoning", text: remaining.reasoning, source: "runtime-output", conversationId: payload.conversationId });
+    }
+    if (remaining.answer) {
+      answer += remaining.answer;
+      send({ type: "token", text: remaining.answer, conversationId: payload.conversationId });
+    }
+    if (!answer && !reasoning && reply) {
+      const parsedReply = splitReasoningFromResponse(reply);
+      answer = parsedReply.answer;
+      reasoning = parsedReply.reasoning;
+      if (reasoning) {
+        markReasoningDetected("runtime-output");
+        send({ type: "reasoning", text: reasoning, source: "runtime-output", conversationId: payload.conversationId });
+      }
+      if (answer) send({ type: "token", text: answer, conversationId: payload.conversationId });
+    }
+
+    const elapsed = generationStartedAt
+      ? Math.max(0.001, (Date.now() - generationStartedAt) / 1000)
+      : Math.max(0.001, (Date.now() - start) / 1000);
+    if (tokens === 0) tokens = loadedModel?.tokenize(reply || `${reasoning}${answer}`).length ?? 0;
     const tps = tokens / Math.max(0.1, elapsed);
     send({ type: "stats", tokens, elapsed, tps, conversationId: payload.conversationId });
-    send({ type: "done", text: reply, conversationId: payload.conversationId });
+    send({ type: "done", text: answer, reasoning, conversationId: payload.conversationId });
   } catch (err: any) {
     if (abortFlag.aborted) {
       send({ type: "done", aborted: true, conversationId: payload.conversationId });

@@ -13,7 +13,7 @@ const baseSettings = {
   temperature: 0,
   topP: 1,
   topK: 40,
-  maxTokens: 32,
+  maxTokens: 128,
   repeatPenalty: 1.1,
   seed: 42,
   modelProfiles: {},
@@ -40,23 +40,26 @@ onLlamaEvent((event) => {
   if (event.type === "token") {
     target.chunks += 1;
     target.text += event.text;
+  } else if (event.type === "reasoning") {
+    target.chunks += 1;
+    target.reasoning += event.text;
   } else if (event.type === "error") {
     waiting.delete(event.conversationId);
     target.reject(new Error(event.error));
   } else if (event.type === "done") {
     waiting.delete(event.conversationId);
-    target.resolve({ text: event.text || target.text, chunks: target.chunks });
+    target.resolve({ text: event.text || target.text, reasoning: event.reasoning || target.reasoning, chunks: target.chunks });
   }
 });
 
 async function generate(conversationId) {
   const result = new Promise((resolve, reject) => {
-    waiting.set(conversationId, { resolve, reject, text: "", chunks: 0 });
+    waiting.set(conversationId, { resolve, reject, text: "", reasoning: "", chunks: 0 });
   });
   await streamChat({
     conversationId,
     messages: [{ role: "user", content: "Reply with one short sentence about local AI." }],
-    opts: { temperature: 0, topP: 1, topK: 40, maxTokens: 32, repeatPenalty: 1.1, seed: 42 },
+    opts: { temperature: 0, topP: 1, topK: 40, maxTokens: 128, repeatPenalty: 1.1, seed: 42 },
   }, () => null);
   return await result;
 }
@@ -68,7 +71,7 @@ async function verifyBackend(backend, iteration) {
   if (backend === "cpu") assert.equal(info.gpuLayers, 0, "CPU must not offload model layers");
   if (backend === "vulkan") assert.ok(info.gpuLayers > 0, "Vulkan must offload model layers");
   const response = await generate(`${backend}-${iteration}`);
-  assert.ok(response.text.trim(), `${backend} returned an empty response`);
+  assert.ok((response.text + response.reasoning).trim(), `${backend} returned an empty response`);
   assert.ok(response.chunks > 0, `${backend} emitted no streaming chunks`);
   console.log(`${backend}: ${info.gpuLayers} GPU layers, ${response.chunks} streamed chunks`);
 }

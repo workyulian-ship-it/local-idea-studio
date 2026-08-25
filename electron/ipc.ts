@@ -16,6 +16,7 @@ import {
 } from "./llama.js";
 import { listChats, getChat, saveChat, deleteChat } from "./storage.js";
 import { getSettings, saveSettings, defaultSettings, AppSettings } from "./settings.js";
+import { executeAgentFileAction } from "./agentFiles.js";
 
 export interface IpcContext {
   aiRoot: string;
@@ -71,6 +72,32 @@ export function registerIpcHandlers(ctx: IpcContext) {
     const selected = path.resolve(result.filePaths[0]);
     fs.mkdirSync(selected, { recursive: true });
     return selected;
+  });
+
+  ipcMain.handle("agent:select-workspace", async (_e, current?: string) => {
+    const parent = win();
+    const options = {
+      title: "Choose the folder Agent Mode may work inside",
+      defaultPath: current || app.getPath("documents"),
+      buttonLabel: "Use as Agent workspace",
+      properties: ["openDirectory", "createDirectory"] as Array<"openDirectory" | "createDirectory">,
+    };
+    const result = parent
+      ? await dialog.showOpenDialog(parent, options)
+      : await dialog.showOpenDialog(options);
+    if (result.canceled || !result.filePaths[0]) return null;
+    return fs.realpathSync(result.filePaths[0]);
+  });
+
+  ipcMain.handle("agent:execute-file-action", async (_e, action: unknown) => {
+    const settings = await getSettings(ctx.settingsFile);
+    if (!settings.agentMode) {
+      return { ok: false, approved: false, message: "Agent Mode is disabled. No files were changed." };
+    }
+    if (!settings.agentWorkspace) {
+      return { ok: false, approved: false, message: "Choose an Agent Mode workspace first." };
+    }
+    return executeAgentFileAction(win(), settings.agentWorkspace, action);
   });
 
   ipcMain.handle("system:open-external", async (_e, url: string) => {

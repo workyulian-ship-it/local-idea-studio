@@ -16,6 +16,7 @@ interface ChatsState {
   remove: (id: string) => Promise<void>;
   update: (patch: Partial<Chat>) => Promise<void>;
   append: (msg: ChatMessage) => Promise<void>;
+  updateMessage: (id: string, patch: Partial<ChatMessage>) => Promise<void>;
   setStreamText: (value: string | ((current: string) => string)) => void;
   setStreamReasoning: (value: string | ((current: string) => string)) => void;
   setStreamStats: (s: { tps: number; tokens: number; elapsed: number } | null) => void;
@@ -75,6 +76,18 @@ export const useChats = create<ChatsState>((set, get) => ({
     const next: Chat = { ...cur, messages: [...cur.messages, msg], updatedAt: Date.now() };
     await window.lumen.saveChat(next);
     set({ current: next });
+  },
+  updateMessage: async (id, patch) => {
+    const cur = get().current;
+    if (!cur) return;
+    const next: Chat = {
+      ...cur,
+      messages: cur.messages.map((message) => message.id === id ? { ...message, ...patch } : message),
+      updatedAt: Date.now(),
+    };
+    await window.lumen.saveChat(next);
+    set({ current: next });
+    await get().refresh();
   },
   setStreamText: (value) => set((state) => ({
     streamText: typeof value === "function" ? value(state.streamText) : value,

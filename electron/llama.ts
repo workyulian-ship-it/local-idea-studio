@@ -299,6 +299,8 @@ interface ChatPayload {
     repeatPenalty?: number;
     seed?: number;
     systemPrompt?: string;
+    thinkingMode?: AppSettings["thinkingMode"];
+    agentMode?: boolean;
   };
 }
 
@@ -320,7 +322,36 @@ export function normalizeGenerationOptions(opts: ChatPayload["opts"], contextSiz
     maxTokens: getMaxOutputTokens(contextSize, opts?.maxTokens),
     repeatPenalty: clamp(opts?.repeatPenalty, 1.1, 1, 2),
     seed: typeof opts?.seed === "number" && Number.isFinite(opts.seed) ? Math.round(opts.seed) : undefined,
+    thinkingMode: (["minimal", "standard", "max"] as const).includes(opts?.thinkingMode as AppSettings["thinkingMode"])
+      ? opts.thinkingMode as AppSettings["thinkingMode"]
+      : "standard",
   };
+}
+
+export function resolveThinkingPlan(mode: AppSettings["thinkingMode"], maxTokens: number) {
+  const totalTokens = Math.max(1, Math.round(maxTokens));
+  if (mode === "minimal") {
+    return { thoughtTokens: 0, finalAnswerTokens: totalTokens };
+  }
+  const thoughtRatio = mode === "max" ? 0.65 : 0.35;
+  const minimumFinal = Math.min(totalTokens, Math.max(32, Math.floor(totalTokens * (1 - thoughtRatio))));
+  return {
+    thoughtTokens: Math.max(0, totalTokens - minimumFinal),
+    finalAnswerTokens: minimumFinal,
+  };
+}
+
+export function buildModeSystemInstruction(
+  mode: AppSettings["thinkingMode"],
+  agentMode = false,
+) {
+  const thinkingInstruction = mode === "minimal"
+    ? "Thinking mode is Minimal. Answer directly and concisely. Do not emit a chain-of-thought or spend tokens on hidden reasoning."
+    : mode === "max"
+      ? "Thinking mode is Max. Reason carefully when useful, but always stop reasoning early enough to provide a complete final answer within the response limit."
+      : "Thinking mode is Standard. Use compact reasoning when useful and always reserve enough response space for a complete final answer.";
+  if (!agentMode) return thinkingInstruction;
+  return `${thinkingInstruction}\n\nAgent Mode is enabled. You may propose exactly one workspace file action when it is necessary. Never claim that an action has already happened. The app, not you, asks the user for real permission. Emit the proposal as one exact JSON block at the end of your response:\n<agent_action>{"type":"create_file|write_file|append_file|create_directory","path":"relative/path","reason":"plain explanation shown in the permission dialog","content":"text content, omitted only for create_directory"}</agent_action>\nOnly use relative paths inside the selected workspace. Available actions are text-file creation, replacement, append, and folder creation. Shell commands, program execution, file deletion, moving files, network actions, and paths outside the workspace are unavailable. If no file action is needed, do not emit an agent_action block.`;
 }
 
 export async function streamChat(payload: ChatPayload, getWin: () => BrowserWindow | null) {
@@ -344,16 +375,19 @@ export async function streamChat(payload: ChatPayload, getWin: () => BrowserWind
   }
 
   const history: ChatHistoryItem[] = [];
+  const systemParts: string[] = [];
   for (let i = 0; i < lastUserIdx; i++) {
     const m = messages[i];
     if (m.role === "system") {
-      history.push({ type: "system", text: m.content });
+      systemParts.push(m.content);
     } else if (m.role === "user") {
       history.push({ type: "user", text: m.content });
     } else if (m.role === "assistant") {
       history.push({ type: "model", response: [m.content] });
     }
   }
+  systemParts.push(buildModeSystemInstruction(generation.thinkingMode, opts.agentMode === true));
+  history.unshift({ type: "system", text: systemParts.filter(Boolean).join("\n\n") });
 
   try {
     session.setChatHistory(history);
@@ -368,7 +402,7 @@ export async function streamChat(payload: ChatPayload, getWin: () => BrowserWind
   let reasoning = "";
   let lastStatsAt = 0;
   let generationStartedAt = 0;
-  const reasoningParser = new ReasoningStreamParser();
+  let reasoningParser = new ReasoningStreamParser();
 
   const send = (data: unknown) => {
     emitter.emit("event", data);
@@ -447,23 +481,9 @@ export async function streamChat(payload: ChatPayload, getWin: () => BrowserWind
         }
       : false;
   const abortWatcher = abortSignalFrom(abortFlag);
+  const thinkingPlan = resolveThinkingPlan(generation.thinkingMode, generation.maxTokens);
 
-  try {
-    const promptPromise = session.prompt(userPrompt, {
-      temperature: generation.temperature,
-      topK: generation.topK,
-      topP: generation.topP,
-      maxTokens: generation.maxTokens,
-      repeatPenalty,
-      seed: generation.seed,
-      signal: abortWatcher.signal,
-      stopOnAbortSignal: true,
-      onResponseChunk,
-    });
-    const generationDone = promptPromise.then(() => undefined, () => undefined);
-    activeGeneration = generationDone;
-    const reply = await promptPromise;
-
+  const flushReasoningParser = () => {
     const remaining = reasoningParser.flush();
     if (reasoningParser.sawReasoning) markReasoningDetected("runtime-output");
     if (remaining.reasoning) {
@@ -474,6 +494,28 @@ export async function streamChat(payload: ChatPayload, getWin: () => BrowserWind
       answer += remaining.answer;
       send({ type: "token", text: remaining.answer, conversationId: payload.conversationId });
     }
+  };
+
+  const promptWithTracking = async (prompt: string, maxTokens: number, thoughtTokens: number) => {
+    const promptPromise = session.prompt(prompt, {
+      temperature: generation.temperature,
+      topK: generation.topK,
+      topP: generation.topP,
+      maxTokens,
+      budgets: { thoughtTokens },
+      repeatPenalty,
+      seed: generation.seed,
+      signal: abortWatcher.signal,
+      stopOnAbortSignal: true,
+      onResponseChunk,
+    });
+    activeGeneration = promptPromise.then(() => undefined, () => undefined);
+    return promptPromise;
+  };
+
+  try {
+    let reply = await promptWithTracking(userPrompt, generation.maxTokens, thinkingPlan.thoughtTokens);
+    flushReasoningParser();
     if (!answer && !reasoning && reply) {
       const parsedReply = splitReasoningFromResponse(reply);
       answer = parsedReply.answer;
@@ -483,6 +525,23 @@ export async function streamChat(payload: ChatPayload, getWin: () => BrowserWind
         send({ type: "reasoning", text: reasoning, source: "runtime-output", conversationId: payload.conversationId });
       }
       if (answer) send({ type: "token", text: answer, conversationId: payload.conversationId });
+    }
+
+    // Some reasoning GGUF templates can still consume their whole response in
+    // literal <think> text. Recover automatically with a second pass that has
+    // no thought budget, instead of leaving the user with no final answer.
+    if (!abortFlag.aborted && !answer.trim() && reasoning.trim()) {
+      reasoningParser = new ReasoningStreamParser();
+      const recoveryPrompt = "Provide the complete final answer to my previous request now. Output only the answer, with no analysis, reasoning, or thought tags.";
+      reply = await promptWithTracking(recoveryPrompt, thinkingPlan.finalAnswerTokens, 0);
+      flushReasoningParser();
+      if (!answer.trim() && reply) {
+        const parsedReply = splitReasoningFromResponse(reply);
+        if (parsedReply.answer) {
+          answer += parsedReply.answer;
+          send({ type: "token", text: parsedReply.answer, conversationId: payload.conversationId });
+        }
+      }
     }
 
     const elapsed = generationStartedAt

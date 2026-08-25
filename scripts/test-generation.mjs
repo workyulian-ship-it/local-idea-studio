@@ -32,6 +32,9 @@ const baseSettings = {
   theme: "dark",
   defaultModelPath: null,
   showTokensPerSecond: true,
+  thinkingMode: "standard",
+  agentMode: false,
+  agentWorkspace: null,
 };
 
 const waiting = new Map();
@@ -75,9 +78,11 @@ try {
     temperature: 0,
     topP: 1,
     topK: 40,
-    maxTokens: 192,
+    maxTokens: 384,
     repeatPenalty: 1.1,
     seed: 42,
+    thinkingMode: "standard",
+    agentMode: false,
   });
   const creative = await generate("temperature-high", {
     temperature: 1.4,
@@ -86,9 +91,11 @@ try {
     maxTokens: 192,
     repeatPenalty: 1.1,
     seed: 99,
+    thinkingMode: "minimal",
+    agentMode: false,
   });
 
-  if (!(deterministic.text + deterministic.reasoning).trim()) throw new Error("Deterministic generation returned an empty response");
+  if (!deterministic.text.trim()) throw new Error("Standard thinking did not reserve a final answer");
   console.log(`Temperature 0.00 answer: ${deterministic.text.trim() || "(reasoning-only)"}`);
   console.log(`Temperature 0.00 reasoning chars: ${deterministic.reasoning.length}`);
   console.log(`Temperature 1.40 answer: ${creative.text.trim() || "(reasoning-only)"}`);

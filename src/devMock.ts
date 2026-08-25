@@ -21,6 +21,9 @@ const settings: AppSettings = {
   theme: "dark",
   defaultModelPath: null,
   showTokensPerSecond: true,
+  thinkingMode: "standard",
+  agentMode: false,
+  agentWorkspace: null,
 };
 
 const repos: HfSearchResult[] = [
@@ -97,6 +100,13 @@ export function installDevMock() {
     showItemInFolder: async () => true,
     getGpuInfo: async () => ({ backend: loadedModel?.backend ?? "vulkan", gpu: loadedModel?.gpu ?? "AMD Radeon", modelLoaded: !!loadedModel }),
     selectModelsDirectory: async () => "C:\\AI Models",
+    selectAgentWorkspace: async () => "C:\\Agent Workspace",
+    executeAgentAction: async (action) => ({
+      ok: true,
+      approved: true,
+      message: `Mock completed ${action.type}: ${action.path}`,
+      path: `C:\\Agent Workspace\\${action.path}`,
+    }),
     getSettings: async () => savedSettings,
     saveSettings: async (next: Partial<AppSettings>) => (savedSettings = { ...savedSettings, ...next }),
     hfSearch: async ({ cursor }: any) => ({

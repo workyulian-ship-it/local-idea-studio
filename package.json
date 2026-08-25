@@ -1,6 +1,6 @@
 {
   "name": "local-idea-studio",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Local Idea Studio - Private local AI desktop app with CPU, CUDA, and Vulkan acceleration.",
   "main": "dist-electron/main.js",
   "author": "Local Idea Studio",
@@ -23,7 +23,11 @@
     "lint": "tsc --noEmit && tsc -p electron/tsconfig.json --noEmit",
     "test:paths": "npm run build:electron && node scripts/test-paths.mjs",
     "test:backend-switch": "npm run build:electron && node scripts/test-backend-switch.mjs",
-    "test:reasoning": "npm run build:electron && node scripts/test-reasoning-parser.mjs"
+    "test:reasoning": "npm run build:electron && node scripts/test-reasoning-parser.mjs",
+    "test:thinking": "npm run build:electron && node scripts/test-thinking-modes.mjs",
+    "test:agent": "npm run build:electron && node scripts/test-agent-files.mjs",
+    "test:agent-generation": "npm run build:electron && node scripts/test-agent-generation.mjs",
+    "test:all": "npm run lint && npm run test:reasoning && npm run test:thinking && npm run test:agent"
   },
   "dependencies": {
     "clsx": "^2.1.1",

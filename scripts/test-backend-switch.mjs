@@ -30,6 +30,9 @@ const baseSettings = {
   theme: "dark",
   defaultModelPath: null,
   showTokensPerSecond: true,
+  thinkingMode: "standard",
+  agentMode: false,
+  agentWorkspace: null,
 };
 
 const waiting = new Map();
@@ -59,7 +62,7 @@ async function generate(conversationId) {
   await streamChat({
     conversationId,
     messages: [{ role: "user", content: "Reply with one short sentence about local AI." }],
-    opts: { temperature: 0, topP: 1, topK: 40, maxTokens: 128, repeatPenalty: 1.1, seed: 42 },
+    opts: { temperature: 0, topP: 1, topK: 40, maxTokens: 128, repeatPenalty: 1.1, seed: 42, thinkingMode: "standard", agentMode: false },
   }, () => null);
   return await result;
 }

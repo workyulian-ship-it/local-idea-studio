@@ -26,6 +26,9 @@ export interface AppSettings {
   theme: "dark";
   defaultModelPath: string | null;
   showTokensPerSecond: boolean;
+  thinkingMode: "minimal" | "standard" | "max";
+  agentMode: boolean;
+  agentWorkspace: string | null;
 }
 
 export interface ModelProfile {
@@ -61,6 +64,9 @@ export const defaultSettings: AppSettings = {
   theme: "dark",
   defaultModelPath: null,
   showTokensPerSecond: true,
+  thinkingMode: "standard",
+  agentMode: false,
+  agentWorkspace: null,
 };
 
 export async function getSettings(settingsFile: string): Promise<AppSettings> {
@@ -121,6 +127,13 @@ function normalizeSettings(settings: AppSettings): AppSettings {
       ? settings.gpuBackend
       : defaultSettings.gpuBackend,
     threads: numberInRange(settings.threads, defaultSettings.threads, 0, 256, true),
+    thinkingMode: (["minimal", "standard", "max"] as const).includes(settings.thinkingMode)
+      ? settings.thinkingMode
+      : defaultSettings.thinkingMode,
+    agentMode: settings.agentMode === true,
+    agentWorkspace: typeof settings.agentWorkspace === "string" && settings.agentWorkspace.trim()
+      ? path.resolve(settings.agentWorkspace.trim())
+      : null,
     modelProfiles: profiles,
     modelsDirectory: typeof settings.modelsDirectory === "string" && settings.modelsDirectory.trim()
       ? path.resolve(settings.modelsDirectory.trim())

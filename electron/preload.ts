@@ -8,6 +8,8 @@ const api = {
   showItemInFolder: (p: string) => ipcRenderer.invoke("system:show-item", p),
   getGpuInfo: () => ipcRenderer.invoke("system:gpu"),
   selectModelsDirectory: (current?: string) => ipcRenderer.invoke("system:select-models-directory", current),
+  selectAgentWorkspace: (current?: string) => ipcRenderer.invoke("agent:select-workspace", current),
+  executeAgentAction: (action: unknown) => ipcRenderer.invoke("agent:execute-file-action", action),
 
   // settings
   getSettings: () => ipcRenderer.invoke("settings:get"),

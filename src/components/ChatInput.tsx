@@ -1,18 +1,19 @@
 import { useEffect, useRef, useState } from "react";
-import { Send, Square, Loader2, Paperclip, Settings2 } from "lucide-react";
+import { Send, Square, Settings2, ShieldCheck } from "lucide-react";
 import { useSettings } from "../store/settings";
 import { useModels } from "../store/models";
 import { useChats } from "../store/chats";
 import { useUi } from "../store/ui";
 import { cn } from "../lib/utils";
 import { getEffectiveModelSettings } from "../lib/modelSettings";
+import { parseAgentAction } from "../lib/agentActions";
 
 interface Props {
   disabled?: boolean;
 }
 
 export function ChatInput({ disabled }: Props) {
-  const { settings } = useSettings();
+  const { settings, update: updateSettings } = useSettings();
   const { loaded } = useModels();
   const { current, streaming, streamStats, append, setStreaming, resetStream, update: updateChat } = useChats();
   const { pushToast } = useUi();
@@ -71,10 +72,16 @@ export function ChatInput({ disabled }: Props) {
   const finalize = async (text: string, reasoning?: string, aborted?: boolean) => {
     const chatState = useChats.getState();
     if (!chatState.current) return;
-    const visibleText = text.trim()
-      ? text
+    const currentSettings = useSettings.getState().settings;
+    const parsedAction = currentSettings?.agentMode ? parseAgentAction(text) : { visibleText: text };
+    const action = parsedAction.action;
+    const cleanText = parsedAction.visibleText;
+    const visibleText = cleanText.trim()
+      ? cleanText
+      : action
+        ? `Agent Mode proposes: **${action.reason}**`
       : reasoning?.trim()
-        ? "_(The model used its response budget while reasoning and stopped before producing a final answer. Increase Max response tokens and try again.)_"
+        ? "_(The model did not produce a final answer after automatic recovery. Try Standard or Minimal thinking, or increase Max response tokens.)_"
         : "_(The model returned an empty response.)_";
     const assistantMsg = {
       id: Math.random().toString(36).slice(2),
@@ -83,6 +90,11 @@ export function ChatInput({ disabled }: Props) {
       reasoning: reasoning?.trim() || undefined,
       stats: chatState.streamStats ?? undefined,
       createdAt: Date.now(),
+      agentAction: action,
+      agentActionStatus: action ? "pending" as const : undefined,
+      agentActionResult: parsedAction.error
+        ? `Invalid Agent Mode request: ${parsedAction.error}. No files were changed.`
+        : undefined,
     };
     await chatState.append(assistantMsg);
     chatState.setStreaming(false);
@@ -135,6 +147,8 @@ export function ChatInput({ disabled }: Props) {
           repeatPenalty: effectiveSettings?.repeatPenalty,
           seed: effectiveSettings?.seed ?? undefined,
           systemPrompt: effectiveSettings?.systemPrompt,
+          thinkingMode: settings?.thinkingMode,
+          agentMode: settings?.agentMode,
         },
       });
     } catch (e: any) {
@@ -220,6 +234,27 @@ export function ChatInput({ disabled }: Props) {
               <span>top-p {effectiveSettings?.topP?.toFixed(2)}</span>
               <span>top-k {effectiveSettings?.topK}</span>
               <span>max {effectiveSettings?.maxTokens}</span>
+              <label className="inline-flex items-center gap-1">
+                <span>think</span>
+                <select
+                  aria-label="Thinking mode"
+                  value={settings?.thinkingMode ?? "standard"}
+                  onChange={(event) => void updateSettings({
+                    thinkingMode: event.target.value as "minimal" | "standard" | "max",
+                  })}
+                  disabled={streaming}
+                  className="bg-bg-elev border border-border rounded px-1 py-0.5 text-text outline-none"
+                >
+                  <option value="minimal">minimal</option>
+                  <option value="standard">standard</option>
+                  <option value="max">max</option>
+                </select>
+              </label>
+              {settings?.agentMode && (
+                <span className="inline-flex items-center gap-1 text-success">
+                  <ShieldCheck className="w-3 h-3" /> agent · permission required
+                </span>
+              )}
               {settings?.showTokensPerSecond && streaming && streamStats && (
                 <span className="text-accent">
                   {streamStats.tps.toFixed(1)} tok/s · {streamStats.tokens} tokens · {streamStats.elapsed.toFixed(1)}s

@@ -7,6 +7,8 @@ declare global {
       showItemInFolder: (p: string) => Promise<boolean>;
       getGpuInfo: () => Promise<any>;
       selectModelsDirectory: (current?: string) => Promise<string | null>;
+      selectAgentWorkspace: (current?: string) => Promise<string | null>;
+      executeAgentAction: (action: AgentActionRequest) => Promise<AgentActionResult>;
       getSettings: () => Promise<any>;
       saveSettings: (s: any) => Promise<any>;
       hfSearch: (q: any) => Promise<any>;
@@ -124,6 +126,9 @@ export interface ChatMessage {
   reasoning?: string;
   stats?: { tps: number; tokens: number; elapsed: number };
   createdAt: number;
+  agentAction?: AgentActionRequest;
+  agentActionStatus?: "pending" | "running" | "completed" | "declined" | "failed";
+  agentActionResult?: string;
 }
 
 export interface Chat {
@@ -157,6 +162,25 @@ export interface AppSettings {
   theme: "dark";
   defaultModelPath: string | null;
   showTokensPerSecond: boolean;
+  thinkingMode: "minimal" | "standard" | "max";
+  agentMode: boolean;
+  agentWorkspace: string | null;
+}
+
+export interface AgentActionRequest {
+  id: string;
+  type: "create_file" | "write_file" | "append_file" | "create_directory";
+  path: string;
+  reason: string;
+  content?: string;
+}
+
+export interface AgentActionResult {
+  ok: boolean;
+  approved: boolean;
+  message: string;
+  path?: string;
+  backupPath?: string;
 }
 
 export interface ModelProfile {

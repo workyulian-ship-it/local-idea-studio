@@ -3,7 +3,7 @@ import { useSettings } from "../store/settings";
 import { useModels } from "../store/models";
 import { useChats } from "../store/chats";
 import { useUi } from "../store/ui";
-import { Folder, Loader2, RotateCcw } from "lucide-react";
+import { Brain, Folder, Loader2, RotateCcw, ShieldCheck } from "lucide-react";
 import type { AppSettings, ModelProfile, SystemPaths } from "../types";
 import { cn } from "../lib/utils";
 import { getEffectiveModelSettings, getModelProfile } from "../lib/modelSettings";
@@ -92,6 +92,29 @@ export function SettingsPanel() {
     await refreshModels();
     pushToast({ kind: "info", text: "Using the default model folder" });
   };
+  const chooseAgentWorkspace = async () => {
+    const selected = await window.lumen.selectAgentWorkspace(settings.agentWorkspace ?? undefined);
+    if (!selected) return null;
+    await update({ agentWorkspace: selected });
+    pushToast({ kind: "success", text: "Agent workspace updated" });
+    return selected;
+  };
+  const toggleAgentMode = async (enabled: boolean) => {
+    if (!enabled) {
+      await update({ agentMode: false });
+      return;
+    }
+    let workspace = settings.agentWorkspace;
+    if (!workspace) {
+      workspace = await window.lumen.selectAgentWorkspace();
+      if (!workspace) {
+        pushToast({ kind: "info", text: "Agent Mode remains off until you choose a workspace" });
+        return;
+      }
+    }
+    await update({ agentWorkspace: workspace, agentMode: true });
+    pushToast({ kind: "success", text: "Agent Mode enabled with per-action permission" });
+  };
   const changeBackend = async (nextBackend: AppSettings["gpuBackend"]) => {
     if (nextBackend === settings.gpuBackend || backendChanging) return;
     const previousBackend = settings.gpuBackend;
@@ -160,6 +183,35 @@ export function SettingsPanel() {
         </div>
 
         <Section title="Generation">
+          <div>
+            <div className="flex items-center gap-1.5 text-xs text-text-muted mb-2">
+              <Brain className="w-3.5 h-3.5 text-accent" /> Thinking mode
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                ["minimal", "Minimal", "Fast, direct answer"],
+                ["standard", "Standard", "Balanced reasoning"],
+                ["max", "Max", "Deepest reasoning"],
+              ] as const).map(([value, label, hint]) => (
+                <button
+                  key={value}
+                  onClick={() => void update({ thinkingMode: value })}
+                  className={cn(
+                    "rounded-md border px-2 py-2 text-left transition-colors",
+                    settings.thinkingMode === value
+                      ? "border-accent/60 bg-accent/10"
+                      : "border-border bg-bg-elev hover:bg-bg-hover",
+                  )}
+                >
+                  <div className="text-xs font-medium">{label}</div>
+                  <div className="text-[10px] text-text-dim mt-0.5">{hint}</div>
+                </button>
+              ))}
+            </div>
+            <div className="text-[10px] text-text-dim mt-1.5">
+              Every mode reserves tokens for a final answer. Models without native reasoning still answer normally.
+            </div>
+          </div>
           <Slider label="Temperature" value={effective.temperature} min={0} max={2} step={0.05}
             onChange={(v) => updateModelSetting({ temperature: v })}
             format={(v) => v.toFixed(2)}
@@ -203,6 +255,40 @@ export function SettingsPanel() {
             className="input font-mono text-xs leading-relaxed"
             placeholder="You are a helpful assistant…"
           />
+        </Section>
+
+        <Section title="Agent Mode (permission-gated preview)">
+          <div className="grid grid-cols-2 gap-2">
+            <Toggle
+              label="Enable Agent Mode"
+              hint="Let the model propose workspace file changes"
+              value={settings.agentMode}
+              onChange={(value) => void toggleAgentMode(value)}
+            />
+            <div className="rounded-md border border-border bg-bg-elev p-2.5">
+              <div className="flex items-center gap-2 text-xs font-medium">
+                <ShieldCheck className="w-3.5 h-3.5 text-success" /> Allow once, every action
+              </div>
+              <div className="text-[10px] text-text-dim mt-0.5">
+                A native confirmation appears before each file operation.
+              </div>
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-text-muted mb-1.5">Allowed workspace</div>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 min-w-0 bg-bg-elev px-2 py-1.5 rounded border border-border truncate text-xs">
+                {settings.agentWorkspace ?? "No workspace selected"}
+              </code>
+              <button onClick={() => void chooseAgentWorkspace()} className="btn-secondary text-xs shrink-0">
+                <Folder className="w-3.5 h-3.5" /> {settings.agentWorkspace ? "Change…" : "Choose…"}
+              </button>
+            </div>
+          </div>
+          <div className="rounded-md border border-warning/30 bg-warning/5 px-3 py-2 text-[11px] text-text-muted leading-relaxed">
+            This preview only creates, replaces, or appends text files and creates folders inside the selected workspace.
+            It cannot run commands, delete files, or access paths outside that folder. Replacing a file creates a backup.
+          </div>
         </Section>
 
         <Section title="Performance (GPU acceleration)">

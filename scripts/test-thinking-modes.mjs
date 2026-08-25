@@ -18,6 +18,9 @@ assert.doesNotMatch(normalInstruction, /agent_action/);
 const agentInstruction = buildModeSystemInstruction("max", true);
 assert.match(agentInstruction, /<agent_action>/);
 assert.match(agentInstruction, /relative paths/i);
+assert.match(agentInstruction, /list_directory/);
+assert.match(agentInstruction, /read_file/);
+assert.match(agentInstruction, /replace_in_file/);
 assert.match(agentInstruction, /Shell commands.*unavailable/i);
 
 console.log("Thinking plans and Agent Mode system protocol passed.");

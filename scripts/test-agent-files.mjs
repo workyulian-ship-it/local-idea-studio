@@ -3,6 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { validateAgentFileAction } from "../dist-electron/agentValidation.js";
+import { executeApprovedAgentFileAction } from "../dist-electron/agentOperations.js";
 
 const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "local-idea-agent-test-"));
 try {
@@ -23,6 +24,48 @@ try {
   });
   assert.equal(leadingSlash.relativePath, "hello.txt");
   assert.equal(leadingSlash.action.path, "hello.txt");
+
+  fs.mkdirSync(path.join(workspace, "src"));
+  fs.writeFileSync(path.join(workspace, "src", "hello.ts"), "export const greeting = 'hello';\nconsole.log(greeting);\n", "utf8");
+
+  const rootList = executeApprovedAgentFileAction(workspace, {
+    type: "list_directory",
+    path: ".",
+    reason: "Inspect the project files before editing code.",
+  });
+  assert.equal(rootList.ok, true);
+  assert.match(rootList.output ?? "", /\[directory\] src/);
+
+  const read = executeApprovedAgentFileAction(workspace, {
+    type: "read_file",
+    path: "src/hello.ts",
+    reason: "Read the requested source file before editing it.",
+    startLine: 1,
+    endLine: 2,
+  });
+  assert.equal(read.ok, true);
+  assert.match(read.output ?? "", /1: export const greeting/);
+
+  const edit = executeApprovedAgentFileAction(workspace, {
+    type: "replace_in_file",
+    path: "src/hello.ts",
+    reason: "Update the greeting exactly as requested.",
+    oldText: "export const greeting = 'hello';",
+    newText: "export const greeting = 'hello world';",
+  });
+  assert.equal(edit.ok, true);
+  assert.equal(fs.readFileSync(path.join(workspace, "src", "hello.ts"), "utf8"), "export const greeting = 'hello world';\nconsole.log(greeting);\n");
+  assert.equal(fs.readFileSync(path.join(workspace, "src", "hello.ts.local-idea-backup"), "utf8"), "export const greeting = 'hello';\nconsole.log(greeting);\n");
+
+  const ambiguousEdit = executeApprovedAgentFileAction(workspace, {
+    type: "replace_in_file",
+    path: "src/hello.ts",
+    reason: "Attempt an ambiguous edit that must be blocked.",
+    oldText: "greeting",
+    newText: "message",
+  });
+  assert.equal(ambiguousEdit.ok, false);
+  assert.match(ambiguousEdit.message, /appears 2 times/i);
 
   assert.throws(() => validateAgentFileAction(workspace, {
     type: "write_file",
@@ -50,6 +93,14 @@ try {
     path: "important.txt",
     reason: "Unsupported destructive operation.",
   }), /unsupported/i);
+
+  assert.throws(() => validateAgentFileAction(workspace, {
+    type: "read_file",
+    path: "src/hello.ts",
+    reason: "Try to read too much in one operation.",
+    startLine: 1,
+    endLine: 401,
+  }), /at most 400 lines/i);
 } finally {
   fs.rmSync(workspace, { recursive: true, force: true });
 }

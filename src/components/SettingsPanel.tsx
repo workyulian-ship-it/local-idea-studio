@@ -333,7 +333,7 @@ export function SettingsPanel() {
             </div>
           </div>
           <div className="rounded-md border border-warning/30 bg-warning/5 px-3 py-2 text-[11px] text-text-muted leading-relaxed">
-            This preview only creates, replaces, or appends text files and creates folders inside the selected workspace.
+            Agent Mode can inspect folders, read bounded sections of text/code files, and create or edit files inside the selected workspace. Every action requires a separate native confirmation.
             It cannot run commands, delete files, or access paths outside that folder. Replacing a file creates a backup.
           </div>
         </Section>

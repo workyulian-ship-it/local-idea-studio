@@ -171,10 +171,14 @@ export interface AppSettings {
 
 export interface AgentActionRequest {
   id: string;
-  type: "create_file" | "write_file" | "append_file" | "create_directory";
+  type: "list_directory" | "read_file" | "create_file" | "write_file" | "append_file" | "replace_in_file" | "create_directory";
   path: string;
   reason: string;
   content?: string;
+  oldText?: string;
+  newText?: string;
+  startLine?: number;
+  endLine?: number;
 }
 
 export interface AgentActionResult {
@@ -183,6 +187,7 @@ export interface AgentActionResult {
   message: string;
   path?: string;
   backupPath?: string;
+  output?: string;
 }
 
 export interface ModelProfile {

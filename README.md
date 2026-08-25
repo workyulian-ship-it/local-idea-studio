@@ -6,7 +6,7 @@ Official website: https://lumen-studio-local-ai.lush-flute-8657.chatgpt.site/
 
 Official Discord community: https://discord.gg/cFaES6muP
 
-## v0.1.9 early access
+## v0.2.0 early access
 
 - Windows 10/11 x64
 - Local GGUF inference through `node-llama-cpp`
@@ -17,7 +17,7 @@ Official Discord community: https://discord.gg/cFaES6muP
 - Per-model reasoning detection: compatible GGUF chat templates stream their real reasoning text in a collapsible panel; standard models show only their answer
 - Minimal, Standard, and Max thinking modes with enforced thought budgets that always reserve space for a final answer
 - Automatic final-answer recovery when a reasoning model still reaches its response limit before answering
-- Permission-gated Agent Mode preview for creating, replacing, or appending text files and creating folders inside one user-selected workspace
+- Permission-gated Agent Mode preview for inspecting folders, reading bounded sections of text/code files, creating files, and applying exact code edits inside one user-selected workspace
 - A native **Allow once** confirmation with the model's reason appears before every Agent Mode file operation; declining makes no change
 - After an Agent Mode decision, the application saves the operation result in model context and automatically continues the same response; completed operations are detected and cannot loop as duplicate proposals
 - Workspace-root paths such as `/hello.txt` are safely normalized to `hello.txt` instead of failing, while drive, UNC, traversal, linked-folder, and outside-workspace paths remain blocked
@@ -31,7 +31,7 @@ Official Discord community: https://discord.gg/cFaES6muP
 
 New installations never require a `D:` drive. Existing v0.1.0 users who already have Lumen data on `D:\LLM AI` keep that location so an update does not hide their settings or downloaded models.
 
-The v0.1.9 Windows installer is currently **unsigned**. Windows may display a Microsoft Defender SmartScreen warning. Verify the installer checksum against [`SHA256SUMS.txt`](./SHA256SUMS.txt) before running it.
+The v0.2.0 Windows installer is currently **unsigned**. Windows may display a Microsoft Defender SmartScreen warning. Verify the installer checksum against [`SHA256SUMS.txt`](./SHA256SUMS.txt) before running it.
 
 ## Privacy and network behavior
 
@@ -39,7 +39,7 @@ Prompts and model inference are processed locally by the application. Chats, set
 
 An optional Hugging Face token can be entered in Settings for repositories that require authentication. It is stored in the local settings file and is only sent to Hugging Face requests.
 
-Agent Mode is off by default. When enabled, it is restricted to the workspace folder selected by the user. The v0.1.9 preview does not run shell commands, delete files, or access paths outside that folder. Every proposed operation is validated in the Electron main process and requires a separate native confirmation. Replacing an existing file creates a local backup next to it. A completed, declined, or failed result is stored locally in the conversation so the model can continue without repeating the same operation.
+Agent Mode is off by default. When enabled, it is restricted to the workspace folder selected by the user. It can list one folder, read up to 400 lines of a text/code file at a time, and propose exact text replacements after inspecting the file. It does not run shell commands, delete files, or access paths outside that folder. Every proposed operation is validated in the Electron main process and requires a separate native confirmation. Replacing or editing an existing file creates a local backup next to it. A completed, declined, or failed result is stored locally in the conversation so the model can continue without repeating the same operation.
 
 ## Community and support
 

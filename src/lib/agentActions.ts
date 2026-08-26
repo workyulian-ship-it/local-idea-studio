@@ -10,6 +10,35 @@ const ACTION_TYPES = new Set<AgentActionRequest["type"]>([
   "create_directory",
 ]);
 
+const ACTION_ALIASES: Record<string, AgentActionRequest["type"]> = {
+  list: "list_directory",
+  list_dir: "list_directory",
+  list_files: "list_directory",
+  list_folder: "list_directory",
+  inspect_directory: "list_directory",
+  inspect_folder: "list_directory",
+  read: "read_file",
+  readfile: "read_file",
+  read_text_file: "read_file",
+  inspect_file: "read_file",
+  open_file: "read_file",
+  replace: "replace_in_file",
+  replace_text: "replace_in_file",
+  edit_file: "replace_in_file",
+  create: "create_file",
+  write: "write_file",
+  append: "append_file",
+  mkdir: "create_directory",
+  create_folder: "create_directory",
+};
+
+function normalizeActionType(value: unknown): AgentActionRequest["type"] | null {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim().replace(/[\s-]+/g, "_").toLowerCase();
+  if (ACTION_TYPES.has(normalized as AgentActionRequest["type"])) return normalized as AgentActionRequest["type"];
+  return ACTION_ALIASES[normalized] ?? null;
+}
+
 function extractAgentPayload(text: string) {
   const openMatch = /<agent_action>/i.exec(text);
   if (!openMatch) return null;
@@ -31,7 +60,9 @@ function extractAgentPayload(text: string) {
     else if (char === "}") {
       depth -= 1;
       if (depth === 0) {
-        const closeMatch = /^\s*<\/agent_action>/i.exec(text.slice(index + 1));
+        // Some compact local models emit `}></agent_action>` with one extra
+        // `>` after the JSON object. Treat that as a formatting typo only.
+        const closeMatch = /^\s*>?\s*<\/agent_action>/i.exec(text.slice(index + 1));
         return {
           json: text.slice(jsonStart, index + 1),
           start: openMatch.index,
@@ -53,29 +84,36 @@ export function parseAgentAction(text: string): {
 
   const visibleText = `${text.slice(0, match.start)}${text.slice(match.end)}`.trim();
   try {
-    const raw = JSON.parse(match.json) as Partial<AgentActionRequest>;
-    if (!ACTION_TYPES.has(raw.type as AgentActionRequest["type"])) {
+    const raw = JSON.parse(match.json) as Record<string, unknown>;
+    const actionType = normalizeActionType(raw.type ?? raw.operation ?? raw.action);
+    if (!actionType) {
       throw new Error("unsupported operation");
     }
-    if (typeof raw.path !== "string" || !raw.path.trim()) {
+    const rawPath = raw.path ?? raw.filePath ?? raw.file_path ?? raw.file ?? raw.target;
+    if (typeof rawPath !== "string" || !rawPath.trim()) {
       throw new Error("missing relative path");
     }
-    const proposedPath = raw.path.trim();
+    const proposedPath = rawPath.trim();
     const displayPath = /^[a-zA-Z]:[\\/]/.test(proposedPath) || /^\\\\/.test(proposedPath)
       ? proposedPath
       : proposedPath.replace(/^[\\/]+/, "");
     if (!displayPath) throw new Error("missing relative path");
-    if (typeof raw.reason !== "string" || raw.reason.trim().length < 3) {
-      throw new Error("missing permission reason");
-    }
-    if (["create_file", "write_file", "append_file"].includes(raw.type as string) && typeof raw.content !== "string") {
+    const rawReason = raw.reason ?? raw.explanation;
+    const reason = typeof rawReason === "string" && rawReason.trim().length >= 3
+      ? rawReason.trim()
+      : `Allow the model to ${actionType.replace(/_/g, " ")} “${displayPath}” for the user's request.`;
+    if (["create_file", "write_file", "append_file"].includes(actionType) && typeof raw.content !== "string") {
       throw new Error("missing file content");
     }
-    if (raw.type === "replace_in_file" && (typeof raw.oldText !== "string" || !raw.oldText || typeof raw.newText !== "string")) {
+    const oldText = raw.oldText ?? raw.old_text;
+    const newText = raw.newText ?? raw.new_text;
+    if (actionType === "replace_in_file" && (typeof oldText !== "string" || !oldText || typeof newText !== "string")) {
       throw new Error("missing exact edit text");
     }
-    const startLine = raw.type === "read_file" && raw.startLine != null ? Number(raw.startLine) : undefined;
-    const endLine = raw.type === "read_file" && raw.endLine != null ? Number(raw.endLine) : undefined;
+    const startValue = raw.startLine ?? raw.start_line;
+    const endValue = raw.endLine ?? raw.end_line;
+    const startLine = actionType === "read_file" && startValue != null ? Number(startValue) : undefined;
+    const endLine = actionType === "read_file" && endValue != null ? Number(endValue) : undefined;
     if (startLine != null && (!Number.isInteger(startLine) || startLine < 1)) throw new Error("invalid start line");
     if (endLine != null && (!Number.isInteger(endLine) || endLine < (startLine ?? 1))) throw new Error("invalid end line");
 
@@ -85,12 +123,12 @@ export function parseAgentAction(text: string): {
         id: typeof raw.id === "string" && raw.id.trim()
           ? raw.id.trim()
           : `agent-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        type: raw.type as AgentActionRequest["type"],
+        type: actionType,
         path: displayPath,
-        reason: raw.reason.trim(),
-        ...(["create_file", "write_file", "append_file"].includes(raw.type as string) ? { content: raw.content } : {}),
-        ...(raw.type === "replace_in_file" ? { oldText: raw.oldText, newText: raw.newText } : {}),
-        ...(raw.type === "read_file" ? { startLine, endLine } : {}),
+        reason,
+        ...(["create_file", "write_file", "append_file"].includes(actionType) ? { content: raw.content as string } : {}),
+        ...(actionType === "replace_in_file" ? { oldText: oldText as string, newText: newText as string } : {}),
+        ...(actionType === "read_file" ? { startLine, endLine } : {}),
       },
     };
   } catch (error: any) {
@@ -123,6 +161,15 @@ export function isSameAgentAction(left: AgentActionRequest, right: AgentActionRe
     && (left.newText ?? "") === (right.newText ?? "")
     && (left.startLine ?? 1) === (right.startLine ?? 1)
     && (left.endLine ?? 400) === (right.endLine ?? 400);
+}
+
+/** During the automatic post-permission continuation, block a model from
+ * proposing the same operation on the same target again even if it rewrites
+ * equivalent content in a different form. A later explicit user request is
+ * still allowed because this guard only runs for automatic continuation. */
+export function isSameAgentActionTarget(left: AgentActionRequest, right: AgentActionRequest) {
+  return left.type === right.type
+    && normalizedActionPath(left.path) === normalizedActionPath(right.path);
 }
 
 export function buildAgentActionFeedback(

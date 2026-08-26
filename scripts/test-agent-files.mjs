@@ -74,19 +74,20 @@ try {
     content: "blocked",
   }), /outside/i);
 
-  assert.throws(() => validateAgentFileAction(workspace, {
-    type: "write_file",
-    path: path.resolve(workspace, "absolute.txt"),
-    reason: "Try an absolute path.",
-    content: "blocked",
-  }), /relative/i);
+  const absoluteInside = validateAgentFileAction(workspace, {
+    type: "read_file",
+    path: path.resolve(workspace, "src", "hello.ts"),
+    reason: "Read the exact absolute path supplied by the user.",
+  });
+  assert.equal(absoluteInside.relativePath, path.join("src", "hello.ts"));
+  assert.equal(absoluteInside.action.path, path.join("src", "hello.ts"));
 
   assert.throws(() => validateAgentFileAction(workspace, {
     type: "write_file",
     path: "C:\\Windows\\system.ini",
     reason: "Try a drive-qualified path.",
     content: "blocked",
-  }), /relative/i);
+  }), /outside/i);
 
   assert.throws(() => validateAgentFileAction(workspace, {
     type: "delete_file",

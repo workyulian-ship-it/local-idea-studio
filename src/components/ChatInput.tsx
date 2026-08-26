@@ -6,7 +6,7 @@ import { useChats } from "../store/chats";
 import { useUi } from "../store/ui";
 import { cn } from "../lib/utils";
 import { getEffectiveModelSettings } from "../lib/modelSettings";
-import { isSameAgentAction, parseAgentAction } from "../lib/agentActions";
+import { isSameAgentActionTarget, parseAgentAction } from "../lib/agentActions";
 
 interface Props {
   disabled?: boolean;
@@ -79,7 +79,7 @@ export function ChatInput({ disabled }: Props) {
     const repeatedTerminalAction = Boolean(isAgentContinuation && action && chatState.current.messages.some((message) =>
       ["completed", "declined", "failed"].includes(message.agentActionStatus ?? "")
       && message.agentAction
-      && isSameAgentAction(message.agentAction, action!),
+      && isSameAgentActionTarget(message.agentAction, action!),
     ));
     if (repeatedTerminalAction) action = undefined;
     const cleanText = parsedAction.visibleText;
@@ -158,6 +158,7 @@ export function ChatInput({ disabled }: Props) {
           systemPrompt: effectiveSettings?.systemPrompt,
           thinkingMode: settings?.thinkingMode,
           agentMode: settings?.agentMode,
+          agentWorkspace: settings?.agentWorkspace,
         },
       });
     } catch (e: any) {

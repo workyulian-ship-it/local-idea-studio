@@ -6,7 +6,7 @@ Official website: https://lumen-studio-local-ai.lush-flute-8657.chatgpt.site/
 
 Official Discord community: https://discord.gg/cFaES6muP
 
-## v0.2.0 early access
+## v0.2.1 early access
 
 - Windows 10/11 x64
 - Local GGUF inference through `node-llama-cpp`
@@ -20,7 +20,9 @@ Official Discord community: https://discord.gg/cFaES6muP
 - Permission-gated Agent Mode preview for inspecting folders, reading bounded sections of text/code files, creating files, and applying exact code edits inside one user-selected workspace
 - A native **Allow once** confirmation with the model's reason appears before every Agent Mode file operation; declining makes no change
 - After an Agent Mode decision, the application saves the operation result in model context and automatically continues the same response; completed operations are detected and cannot loop as duplicate proposals
-- Workspace-root paths such as `/hello.txt` are safely normalized to `hello.txt` instead of failing, while drive, UNC, traversal, linked-folder, and outside-workspace paths remain blocked
+- Exact absolute paths pasted from Explorer are accepted only when they resolve inside the selected workspace and are converted to workspace-relative paths before execution
+- Safe Agent Mode operation aliases from smaller local models, such as `read`, `inspect_file`, and `open_file`, normalize to the permission-gated `read_file` action instead of failing as unsupported
+- Workspace-root paths such as `/hello.txt` are safely normalized to `hello.txt`, while absolute paths outside the workspace, UNC paths, traversal, linked-folder escapes, and outside-workspace paths remain blocked
 - The requested response-token limit now has an exact number input up to 32,768 tokens per model; larger requests automatically raise that model's context cap and clearly require a reload
 - Hugging Face GGUF search and downloads
 - Models stored by default in the current user's `Documents/Local Idea Studio/models` folder
@@ -31,7 +33,7 @@ Official Discord community: https://discord.gg/cFaES6muP
 
 New installations never require a `D:` drive. Existing v0.1.0 users who already have Lumen data on `D:\LLM AI` keep that location so an update does not hide their settings or downloaded models.
 
-The v0.2.0 Windows installer is currently **unsigned**. Windows may display a Microsoft Defender SmartScreen warning. Verify the installer checksum against [`SHA256SUMS.txt`](./SHA256SUMS.txt) before running it.
+The v0.2.1 Windows installer is currently **unsigned**. Windows may display a Microsoft Defender SmartScreen warning. Verify the installer checksum against [`SHA256SUMS.txt`](./SHA256SUMS.txt) before running it.
 
 ## Privacy and network behavior
 

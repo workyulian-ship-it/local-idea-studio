@@ -1,1 +1,1 @@
-da41c3d88f69363afc5e310662d223feb1b254ff19ce1ca6bda81230f897afb7  Local.Idea.Studio-0.2.0-win-x64.exe
+31cf3633f208291e1e7d4d717e8e3c1ff9accf2fe16d0cf8868ccdb6473b23cd  Local.Idea.Studio-0.2.1-win-x64.exe

@@ -58,6 +58,7 @@ export async function continueAfterAgentAction(
         systemPrompt: effective.systemPrompt,
         thinkingMode: settings.thinkingMode,
         agentMode: settings.agentMode,
+        agentWorkspace: settings.agentWorkspace,
       },
     });
   } catch (error: any) {

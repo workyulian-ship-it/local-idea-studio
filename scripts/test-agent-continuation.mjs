@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {
   buildAgentActionFeedback,
   isSameAgentAction,
+  isSameAgentActionTarget,
   parseAgentAction,
 } from "../src/lib/agentActions.ts";
 
@@ -17,6 +18,7 @@ const repeated = parseAgentAction(`<agent_action>{"type":"create_file","path":"/
 assert.ok(repeated);
 assert.equal(isSameAgentAction(create, repeated), true, "leading-slash duplicate must be recognized");
 assert.equal(isSameAgentAction(create, { ...repeated, content: "different" }), false, "different content remains a distinct operation");
+assert.equal(isSameAgentActionTarget(create, { ...repeated, content: "different" }), true, "automatic continuation blocks the same operation target even when content is rewritten");
 
 const success = buildAgentActionFeedback(create, {
   ok: true,
@@ -51,6 +53,19 @@ assert.ok(proposedRead);
 assert.equal(proposedRead.type, "read_file");
 assert.equal(proposedRead.startLine, 20);
 assert.equal(proposedRead.endLine, 35);
+
+const aliasedRead = parseAgentAction(`<agent_action>{"operation":"read","file_path":"D:\\\\ai test\\\\number_guessing_game.py","explanation":"Read the file requested by the user.","start_line":1,"end_line":40}</agent_action>`).action;
+assert.ok(aliasedRead);
+assert.equal(aliasedRead.type, "read_file");
+assert.equal(aliasedRead.path, "D:\\ai test\\number_guessing_game.py");
+assert.equal(aliasedRead.startLine, 1);
+assert.equal(aliasedRead.endLine, 40);
+
+const compactModelWrite = parseAgentAction(`<agent_action>{"type":"write_file","path":"hello.py","content":"print('Hello')"}></agent_action>`);
+assert.ok(compactModelWrite.action);
+assert.equal(compactModelWrite.action.type, "write_file");
+assert.match(compactModelWrite.action.reason, /write file.*hello\.py/i);
+assert.equal(compactModelWrite.visibleText, "");
 
 const proposedEdit = parseAgentAction(`<agent_action>{"type":"replace_in_file","path":"src/app.ts","reason":"Apply the requested exact code edit.","oldText":"const before = true;","newText":"const after = true;"}</agent_action>`).action;
 assert.ok(proposedEdit);

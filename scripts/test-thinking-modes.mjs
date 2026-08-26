@@ -22,5 +22,9 @@ assert.match(agentInstruction, /list_directory/);
 assert.match(agentInstruction, /read_file/);
 assert.match(agentInstruction, /replace_in_file/);
 assert.match(agentInstruction, /Shell commands.*unavailable/i);
+const workspaceInstruction = buildModeSystemInstruction("standard", true, "D:\\ai test");
+assert.match(workspaceInstruction, /D:\\\\ai test/);
+assert.match(workspaceInstruction, /absolute path under this exact root/i);
+assert.match(workspaceInstruction, /corresponding relative action path/i);
 
 console.log("Thinking plans and Agent Mode system protocol passed.");

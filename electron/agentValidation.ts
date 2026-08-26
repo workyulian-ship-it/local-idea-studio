@@ -40,13 +40,23 @@ function nearestExistingParent(target: string) {
   return current;
 }
 
-function normalizeModelProposedPath(value: string, allowWorkspaceRoot = false) {
+function normalizeModelProposedPath(workspaceReal: string, value: string, allowWorkspaceRoot = false) {
   const proposed = value.trim();
-  // Models commonly describe a workspace-root file as `/hello.txt`. Treat a
-  // leading slash as workspace-relative, but never reinterpret drive-qualified
-  // paths or UNC/device paths, which must remain blocked.
-  if (/^[a-zA-Z]:[\\/]/.test(proposed) || /^\\\\/.test(proposed)) {
-    throw new Error("Agent file paths must be relative to the selected workspace.");
+  // A user may paste the exact Windows path shown by Explorer. Accept it only
+  // when it resolves inside the already-selected workspace, then convert it to
+  // the same workspace-relative form used by every later safety check.
+  if (/^\\\\/.test(proposed)) {
+    throw new Error("UNC and device paths are unavailable in Agent Mode.");
+  }
+  if (/^[a-zA-Z]:[\\/]/.test(proposed) || (process.platform !== "win32" && path.isAbsolute(proposed))) {
+    const absoluteTarget = path.resolve(proposed);
+    if (!isInside(workspaceReal, absoluteTarget)) {
+      throw new Error("The requested path is outside the selected Agent Mode workspace.");
+    }
+    const relativeFromWorkspace = path.relative(workspaceReal, absoluteTarget);
+    if ((!relativeFromWorkspace || relativeFromWorkspace === ".") && allowWorkspaceRoot) return ".";
+    if (!relativeFromWorkspace) throw new Error("Agent file paths must name a file or folder inside the workspace.");
+    return relativeFromWorkspace;
   }
   const relative = proposed.replace(/^[\\/]+/, "");
   if ((!relative || relative === ".") && allowWorkspaceRoot) return ".";
@@ -56,6 +66,7 @@ function normalizeModelProposedPath(value: string, allowWorkspaceRoot = false) {
 
 export function validateAgentFileAction(workspace: string, raw: unknown) {
   if (!workspace || !fs.existsSync(workspace)) throw new Error("Choose an Agent Mode workspace first.");
+  const workspaceReal = fs.realpathSync(workspace);
   const action = raw as Partial<AgentFileAction> | null;
   if (!action || typeof action !== "object" || !ACTIONS.has(action.type as AgentFileAction["type"])) {
     throw new Error("Unsupported agent action.");
@@ -63,7 +74,7 @@ export function validateAgentFileAction(workspace: string, raw: unknown) {
   if (typeof action.path !== "string" || !action.path.trim()) {
     throw new Error("Agent file paths must be relative to the selected workspace.");
   }
-  const normalizedPath = normalizeModelProposedPath(action.path, action.type === "list_directory");
+  const normalizedPath = normalizeModelProposedPath(workspaceReal, action.path, action.type === "list_directory");
   if (typeof action.reason !== "string" || action.reason.trim().length < 3) {
     throw new Error("The model must explain why this file operation is needed.");
   }
@@ -97,7 +108,6 @@ export function validateAgentFileAction(workspace: string, raw: unknown) {
     action.endLine = endLine;
   }
 
-  const workspaceReal = fs.realpathSync(workspace);
   const target = path.resolve(workspaceReal, normalizedPath);
   if (!isInside(workspaceReal, target) || (target === workspaceReal && action.type !== "list_directory")) {
     throw new Error("The requested path is outside the selected Agent Mode workspace.");
